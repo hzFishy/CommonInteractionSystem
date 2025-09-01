@@ -24,6 +24,10 @@
 		{
 			"Name": "FishyUtils",
 			"Enabled": true
+		},
+		{
+			"Name": "FishyWorldSpaceWidgets",
+			"Enabled": true
 		}
 	]
 }

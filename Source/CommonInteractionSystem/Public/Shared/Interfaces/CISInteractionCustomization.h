@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Shared/Data/CISCoreTypes.h"
 #include "UObject/Interface.h"
 #include "CISInteractionCustomization.generated.h"
 
@@ -27,5 +28,11 @@ public:
 	 */
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="CommonInteractionSystem")
 	bool CanInteractWith(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags) const;
-	
+
+	/**
+	 * Should we show the focus widget when StartFocus is called ?
+	 * Also used when refreshing focus status.
+	 */
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="CommonInteractionSystem")
+	bool CanFocusWith(APawn* SourcePawn, UPARAM(ref) FCISInteractionFocusParams& OutCustomizationFocusParams) const;
 };

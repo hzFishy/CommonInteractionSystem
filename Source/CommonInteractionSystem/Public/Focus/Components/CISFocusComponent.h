@@ -5,12 +5,13 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Components/SceneComponent.h"
+#include "Shared/Data/CISCoreTypes.h"
 #include "CISFocusComponent.generated.h"
-
-
 class UCISInteractionComponent;
 class UCISFocusWidget;
-DECLARE_MULTICAST_DELEGATE(FCISOnFocusLostSignature);
+
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FCISOnFocusLostSignature, APawn* /* SourcePawn */);
 
 
 /**
@@ -34,24 +35,34 @@ public:
 	FCISOnFocusLostSignature OnFocusLostDelegate;
 	
 protected:
-	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Setup")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CommonInteractionSystem|Setup")
 	FText FocusText;
 
-	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Setup")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CommonInteractionSystem|Setup", meta=(Categories="CIS.Shared.Icons"))
 	FGameplayTag IconFocusTag;
 
-
-	bool bFocusable = true;
-	bool bIsFocused = false;
-
-	UPROPERTY() TSubclassOf<UCISFocusWidget> LoadedFocusWidgetClass;
-	UPROPERTY() TObjectPtr<UCISFocusWidget> FocusWidget;
-
-	TWeakObjectPtr<UBPGWorldSpaceWidgetsSubsystem> WorldSpaceWidgetsSubsystem;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CommonInteractionSystem|Setup")
+	bool bFocusableByDefault;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CommonInteractionSystem|Setup")
+	TSoftClassPtr<UCISFocusWidget> FocusWidgetClass;
+	
+	
 	TWeakObjectPtr<UCISInteractionComponent> FoundOwnerInteractionComponent;
 	
-	/* Panw that IS currently focusing */
+	UPROPERTY() TSubclassOf<UCISFocusWidget> LoadedFocusWidgetClass;
+	
+	bool bFocusable;
+	
+	bool bIsFocused;
+
+	/* Pawn that IS currently focusing */
 	TWeakObjectPtr<APawn> FocusingSourcePawn;
+
+	/** Current displaying focus widget instance */
+	UPROPERTY() TObjectPtr<UCISFocusWidget> FocusWidget;
+	/** Last saved focus params used when focusing */
+	FCISInteractionFocusParams LatestFocusParams;
 	
 	
 	/*----------------------------------------------------------------------------
@@ -59,46 +70,73 @@ protected:
 	----------------------------------------------------------------------------*/
 public:
 	UCISFocusComponent();
-
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
+	
 	virtual void InitializeComponent() override;
 
 	
 	/*----------------------------------------------------------------------------
 		Core
 	----------------------------------------------------------------------------*/
-
-
-#pragma region Core
-
 public:
-	void SetFocusText(const FText& InText);
-
-	void SetActionType(FGameplayTag Tag);
+	UFUNCTION(BlueprintPure, Category="CommonInteractionSystem|Focus")
+	const FText& GetFocusText() const { return FocusText; };
 	
+	UFUNCTION(BlueprintPure, Category="CommonInteractionSystem|Focus")
+	const FGameplayTag& GetIconFocusTag() const { return IconFocusTag; };
+	
+	UFUNCTION(BlueprintPure, Category="CommonInteractionSystem|Focus")
+	bool IsFocusable() const { return bFocusable; };
+	
+	UFUNCTION(BlueprintPure, Category="CommonInteractionSystem|Focus")
+	bool IsFocused() const { return bIsFocused; };
+	
+	UFUNCTION(BlueprintPure, Category="CommonInteractionSystem|Focus")
+	APawn* GetFocusingSourcePawn() const { return FocusingSourcePawn.Get(); };
+	
+	UFUNCTION(BlueprintPure, Category="CommonInteractionSystem|Focus")
+	UCISFocusWidget* GetFocusWidget() const { return FocusWidget.Get(); };
+	
+	UFUNCTION(BlueprintCallable, Category="CommonInteractionSystem|Focus")
+	virtual void SetFocusText(const FText& NewFocusText);
+
+	UFUNCTION(BlueprintCallable, Category="CommonInteractionSystem|Focus")
+	virtual void SetIconFocusTag(const FGameplayTag& NewIconFocusTag);
+
+	/** Start focusing this focus component, can fail */
+	virtual void StartFocus(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags);
+
+	/** Stop focusing this focus component */
+	virtual void StopFocus();
+
+	virtual bool CanFocus(APawn* SourcePawn, FCISInteractionFocusParams& InteractionFocusParams);
+
+	template<std::derived_from<UUserWidget> WidgetType>
+	WidgetType* CreateFocusWidget(const FCISInteractionFocusParams& FocusParams)
+	{
+		return Cast<WidgetType>(CreateFocusWidget(FocusParams));
+	}
+	
+	virtual UUserWidget* CreateFocusWidget(const FCISInteractionFocusParams& FocusParams);
+
+	virtual void UpdateFocusWidgetContent(const FCISInteractionFocusParams& FocusParams);
+	
+	/** Update focus widget content if focusable, if not we stop the focus */
+	UFUNCTION(BlueprintCallable, Category="CommonInteractionSystem|Focus")
+	virtual void RefreshFocusWidget(bool bCheckFocusStatus = true);
+
+	
+	/*----------------------------------------------------------------------------
+		Callbacks
+	----------------------------------------------------------------------------*/
 protected:
-	void OnUseComponentUsableStateChangedCallback(bool bNewState);
+	UFUNCTION() void OnInteractableStateChanged(bool bNewState);
 
-	UFUNCTION() void OnUseComponentUse(APawn* Character, EBPGCoreUseType CoreUseType, EBPGUseTypes UseType);
+	UFUNCTION() void OnSingleInteraction(UCISInteractionComponent* InteractionComponent, APawn* SourcePawn,
+		const FGameplayTagContainer& SourceInteractionTags, bool bInteractionSucceeded);
 	
-	UUserWidget* CreateFocusWidget(const BPG_InteractionSystem::FBPGInteractionCustomizationCanFocusParams& ExtraParams);
+	UFUNCTION() void OnHoldInteractionStarted(UCISInteractionComponent* InteractionComponent, APawn* SourcePawn,
+		const FGameplayTagContainer& SourceInteractionTags, bool bInteractionSucceeded, float TimeToHold);
 	
-public:
-	void StartFocus(APawn* P);
-
-	void StopFocus(ABPGPlayerPawnInGame* FocusingCharacter);
-
-	bool CanStartFocus(APawn* FocusingPlayerPawn, bool bSkipIfAlreadyFocusing, BPG_InteractionSystem::FBPGInteractionCustomizationCanFocusParams& OutExtraParams);
-
-	void StartHoldUse(float TimeToHold);
-
-	void EndHoldUse(bool bSuccess);
-
-	/* Will check again if we can focus, will update again the Extra params such as override text */
-	void RefreshFocusWidget();
-
-#pragma endregion
-	
-	
+	UFUNCTION() void OnHoldInteractionEnded(UCISInteractionComponent* InteractionComponent, APawn* SourcePawn,
+		const FGameplayTagContainer& SourceInteractionTags, bool bHoldSucceeded);
 };

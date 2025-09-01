@@ -21,5 +21,8 @@ public:
 	TMap<FGameplayTag, TSoftObjectPtr<UTexture2D>> Icons;
 
 	UFUNCTION(BlueprintPure, Category = "CommonInteractionSystem")
-	UTexture2D* GetLoadedIcon(const FGameplayTag& IconTag) const;
+	UTexture2D* SyncLoadIcon(const FGameplayTag& IconTag) const;
+	
+	UFUNCTION(BlueprintPure, Category = "CommonInteractionSystem")
+	TSoftObjectPtr<UTexture2D> GetUnloadedIcon(const FGameplayTag& IconTag) const;
 };

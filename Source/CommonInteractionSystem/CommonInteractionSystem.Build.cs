@@ -11,17 +11,26 @@ public class CommonInteractionSystem : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core", "CoreUObject", "FishyUtils", "GameplayTasks", "GameplayTasks", "GameplayAbilities"
+				// Core
+				"Core", "CoreUObject",
+				// GAS stuff
+				"GameplayTasks", "GameplayTags", "GameplayAbilities",
+				// UI
+				"UMG",
+				// Fishy Deps
+				"FishyUtils", "FishyWorldSpaceWidgets",
+				// Miscs
+				"DeveloperSettings"
 			}
 		);
-			
 		
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
+				// Core
 				"Engine",
-				"Slate",
-				"SlateCore",
+				// UI
+				"Slate", "SlateCore", 
 			}
 		);
 	}

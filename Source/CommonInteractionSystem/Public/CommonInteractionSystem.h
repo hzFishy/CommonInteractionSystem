@@ -3,6 +3,11 @@
 #pragma once
 
 #include "Modules/ModuleManager.h"
+#include "Console/FUConsole.h"
+
+
+#define CIS_WITH_DEBUG FU_WITH_CONSOLE
+
 
 class FCommonInteractionSystemModule : public IModuleInterface
 {
