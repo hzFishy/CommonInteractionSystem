@@ -10,12 +10,13 @@
 #include "Focus/Components/CISFocusComponent.h"
 #include "Interaction/Abilities/CISInteractionGameplayAbility.h"
 #include "Interaction/Components/CISInteractionComponent.h"
-#include "Interaction/Data/Fragments/Derived/FBPGUseFragmentHold.h"
+#include "Interaction/Data/Fragments/Derived/CISUseFragmentHold.h"
 #include "Interaction/Data/TargetData/CISInteractionTargetData.h"
 #include "Shared/Data/CISCoreTypes.h"
 #include "Utility/FUUtilities.h"
 #include "CommonInteractionSystem.h"
 #include "Draw/FUDraw.h"
+#include "Logging/FULogging.h"
 #include "Utility/FUOrientedBox.h"
 
 
@@ -88,6 +89,7 @@ UCISSourcePawnInteractionComponent::UCISSourcePawnInteractionComponent():
 	TraceChannel(ECC_Visibility),
 	bCanInteract(true),
 	InteractionAbilityEventTag(TAG_CIS_Interaction_Events_AbilityActivate),
+	bAsyncLoadInteractionAbilityClass(true),
 	bCanFocus(true),
 	bTryFocusOnTick(true)
 {
@@ -114,17 +116,32 @@ void UCISSourcePawnInteractionComponent::InitializeComponent()
 
 	if (FU_ENSURE_WEAKNOTNULL_MSG(InteractionAbilityClass, "InteractionAbilityClass is not set"))
 	{
-		// TODO (perf): async load
-		LoadedInteractionAbilityClass = InteractionAbilityClass.LoadSynchronous();
-		
-		if (FU_ENSURE_WEAKVALID_MSG(OwnerAbilitySystemComponent, "OwnerAbilitySystemComponent is invalid"))
+		auto OnInteractionAbilityLoaded = [this](UClass* LoadedAbility) mutable
 		{
-			InteractionAbilitySpecHandle = OwnerAbilitySystemComponent->K2_GiveAbility(LoadedInteractionAbilityClass, 0, -1);
-
-			if (InteractionAbilitySpecHandle.IsValid())
+			LoadedInteractionAbilityClass = LoadedAbility;
+			
+			if (FU_ENSURE_WEAKVALID_MSG(OwnerAbilitySystemComponent, "OwnerAbilitySystemComponent is invalid"))
 			{
-				OwnerAbilitySystemComponent->OnAbilityEnded.AddUObject(this, &ThisClass::OnAbilityEnded);
+				InteractionAbilitySpecHandle = OwnerAbilitySystemComponent->K2_GiveAbility(LoadedInteractionAbilityClass, 0, -1);
+
+				if (InteractionAbilitySpecHandle.IsValid())
+				{
+					OwnerAbilitySystemComponent->OnAbilityEnded.AddUObject(this, &ThisClass::OnAbilityEnded);
+				}
 			}
+		};
+		
+		if (bAsyncLoadInteractionAbilityClass)
+		{
+			InteractionAbilityClass.LoadAsync(FLoadSoftObjectPathAsyncDelegate::CreateWeakLambda(this,
+			[this, OnInteractionAbilityLoaded](const FSoftObjectPath& Path, UObject* Object) mutable
+			{
+					OnInteractionAbilityLoaded(Cast<UClass>(Object));
+			}));
+		}
+		else
+		{
+			OnInteractionAbilityLoaded(InteractionAbilityClass.LoadSynchronous());
 		}
 	}
 }
@@ -180,7 +197,7 @@ void UCISSourcePawnInteractionComponent::SetCanInteract(bool bNewValue)
 		// if was a hold and still running, cancel it
 		if (IsHoldRunning())
 		{
-			// TODO (log)
+			CIS_LOG_D("CanInteract was disabled while a hold interaction is being performed, canceling");
 			CancelHoldInteraction();
 		}
 	}
@@ -194,7 +211,12 @@ void UCISSourcePawnInteractionComponent::SetCanFocus(bool bNewValue)
 
 	if (!bCanFocus)
 	{
-		// TODO: if was focusing stop
+		// if was focusing stop
+		if (PreviousTryFocusData.FocusedBestFocusComponent.IsValid()
+			&& PreviousTryFocusData.FocusedBestFocusComponent->IsFocusedBy(OwnerSourcePawn.Get()))
+		{
+			PreviousTryFocusData.FocusedBestFocusComponent->StopFocus();
+		}
 	}
 }
 
@@ -237,32 +259,35 @@ void UCISSourcePawnInteractionComponent::DoSharedInteractionTrace(FHitResult& Ou
 	/*----------------------------------------------------------------------------
 		Interaction
 	----------------------------------------------------------------------------*/
-void UCISSourcePawnInteractionComponent::OnInputSingleAndHoldInteractionStart(FGameplayTagContainer SourceInteractionTags)
+void UCISSourcePawnInteractionComponent::OnInputSingleInteraction(FGameplayTagContainer SourceInteractionTags)
 {
-	// get interaction component
-	if (auto* InteractionComponent = GetInteractionComponentFromInteractionTrace())
+	// only pass if aimed object accept single interactions
+	auto* InteractionComponent = GetInteractionComponentFromInteractionTrace();
+	if (IsValid(InteractionComponent))
 	{
-		// can be null if not hold type
-		const auto* HoldFragment = InteractionComponent->GetFragment<FCISInteractionFragmentHold>();
-
-		// trigger ability, the interaction code should be called inside
-		if (OwnerAbilitySystemComponent.IsValid() && InteractionAbilitySpecHandle.IsValid())
+		if (InteractionComponent->IsSingleType())
 		{
-			FGameplayEventData EventData;
-			EventData.EventTag = InteractionAbilityEventTag;
-			EventData.Instigator = OwnerSourcePawn.Get();
-			EventData.Target = OwnerSourcePawn.Get();
-			
-			auto* InteractionData = NewObject<UCISInteractionAbilityEventData>();
-			InteractionData->SourceTags = SourceInteractionTags;
-			InteractionData->InteractionTagType = HoldFragment ? TAG_CIS_Interaction_Types_Hold : TAG_CIS_Interaction_Types_Single;
-			EventData.OptionalObject = InteractionData;
+			OnInputSingleOrHandleInteractionStart(
+				InteractionComponent,
+				TAG_CIS_Interaction_Types_Single,
+				SourceInteractionTags
+			);
+		}
+	}
+}
 
-			// TODO (log)
-			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
-				OwnerSourcePawn.Get(),
-				InteractionAbilityEventTag,
-				EventData
+void UCISSourcePawnInteractionComponent::OnInputStartHoldInteraction(FGameplayTagContainer SourceInteractionTags)
+{
+	// only pass if aimed object accept hold interactions
+	auto* InteractionComponent = GetInteractionComponentFromInteractionTrace();
+	if (IsValid(InteractionComponent))
+	{
+		if (InteractionComponent->IsHoldType())
+		{
+			OnInputSingleOrHandleInteractionStart(
+				InteractionComponent,
+				TAG_CIS_Interaction_Types_Hold,
+				SourceInteractionTags
 			);
 		}
 	}
@@ -273,7 +298,7 @@ void UCISSourcePawnInteractionComponent::OnInputHoldInteractionEnd()
 	// cancel hold if running
 	if (IsHoldRunning())
 	{
-		// TODO (log)
+		CIS_LOG_D("Use stopped the hold interaction input while hold interaction was running, canceling it")
 		CancelHoldInteraction();
 	}
 }
@@ -319,7 +344,7 @@ bool UCISSourcePawnInteractionComponent::TryInteraction(const FGameplayTagContai
 			{
 				if (InteractionComponent->IsSingleType())
 				{
-					// TODO (log)
+					CIS_LOG_D("Trying to single interact with {0}", *FU::Utils::GetObjectDetailedName(InteractionComponent));
 					return InteractionComponent->TryInteract(
 						OwnerSourcePawn.Get(),
 						TAG_CIS_Interaction_Types_Single,
@@ -331,7 +356,9 @@ bool UCISSourcePawnInteractionComponent::TryInteraction(const FGameplayTagContai
 					// detect if hold finished (if we started it previously)
 					if (IsHoldRunning() && SharedInteractionRunningProcess.bHoldInteractionFinished)
 					{
-						// TODO (log)
+						CIS_LOG_D("Trying to interact with {0} from completed hold interaction",
+							*FU::Utils::GetObjectDetailedName(InteractionComponent)
+						);
 						// interaction could still fail here if something changed in game while the hold was done
 						return InteractionComponent->TryInteract(
 							OwnerSourcePawn.Get(),
@@ -342,7 +369,7 @@ bool UCISSourcePawnInteractionComponent::TryInteraction(const FGameplayTagContai
 					// dont use if already using
 					else if (IsHoldRunning()) { return false; }
 
-					// TODO (log)
+					CIS_LOG_D("Starting hold interaction process with {0}", *FU::Utils::GetObjectDetailedName(InteractionComponent));
 					// otherwise start a hold operation
 					return HoldInteractionStart(InteractionComponent, SourceInteractionTags);
 				}
@@ -350,8 +377,38 @@ bool UCISSourcePawnInteractionComponent::TryInteraction(const FGameplayTagContai
 		}
 	}
 	
-	// TODO (log)
+	CIS_LOG_D("Try Interaction failed");
 	return false;
+}
+
+void UCISSourcePawnInteractionComponent::OnInputSingleOrHandleInteractionStart(UCISInteractionComponent* InteractionComponent,
+	const FGameplayTag& InteractionTypeTag, const FGameplayTagContainer& SourceInteractionTags)
+{
+	if (FU_ENSURE_VALID(InteractionComponent))
+	{
+		// trigger ability, the interaction code should be called inside
+		if (OwnerAbilitySystemComponent.IsValid() && InteractionAbilitySpecHandle.IsValid())
+		{
+			FGameplayEventData EventData;
+			EventData.EventTag = InteractionAbilityEventTag;
+			EventData.Instigator = OwnerSourcePawn.Get();
+			EventData.Target = OwnerSourcePawn.Get();
+			
+			auto* InteractionData = NewObject<UCISInteractionAbilityEventData>();
+			InteractionData->SourceTags = SourceInteractionTags;
+			InteractionData->InteractionTagType = InteractionTypeTag;
+			EventData.OptionalObject = InteractionData;
+
+			CIS_LOG_D("Gameplay Event with tag {0} sent to owner pawn {1}",
+				InteractionAbilityEventTag, *FU::Utils::GetObjectDetailedName(OwnerSourcePawn.Get())
+			);
+			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
+				OwnerSourcePawn.Get(),
+				InteractionAbilityEventTag,
+				EventData
+			);
+		}
+	}
 }
 
 bool UCISSourcePawnInteractionComponent::IsHoldRunning() const
@@ -364,7 +421,7 @@ bool UCISSourcePawnInteractionComponent::HoldInteractionStart(UCISInteractionCom
 	bool bCanInteractResult = InteractionComponent->CanInteractWith(OwnerSourcePawn.Get(), SourceInteractionTags);
 	const auto* HoldFragment = InteractionComponent->GetFragment<FCISInteractionFragmentHold>();
 	
-	if (bCanInteractResult)
+	if (bCanInteractResult && ensureAlways(HoldFragment))
 	{
 		SharedInteractionRunningProcess.Reset();
 		SharedInteractionRunningProcess.bRunning = true;
@@ -372,8 +429,24 @@ bool UCISSourcePawnInteractionComponent::HoldInteractionStart(UCISInteractionCom
 		SharedInteractionRunningProcess.InteractionComponent = InteractionComponent;
 		SharedInteractionRunningProcess.SelectedFocusComponent = InteractionComponent->GetBestFocusComponent(OwnerSourcePawn.Get());
 
+		// handle blocking movement/look input
+		{
+			auto* OwnerPlayerController = OwnerSourcePawn->GetController();
+			if (IsValid(OwnerPlayerController))
+			{
+				if (HoldFragment->bDisableMovementInputWhileHold)
+				{
+					OwnerPlayerController->SetIgnoreMoveInput(true);
+				}
+				if (HoldFragment->bDisableLookInputWhileHold)
+				{
+					OwnerPlayerController->SetIgnoreLookInput(true);
+				}
+			}
+		}
+		
 		// start timer
-		FTimerDelegate TimerDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::OnHoldInteractionFinished, true);
+		auto TimerDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::OnHoldInteractionFinished, true);
 		GetWorld()->GetTimerManager().SetTimer(
 			SharedInteractionRunningProcess.TimerHandle,
 			TimerDelegate,
@@ -381,11 +454,16 @@ bool UCISSourcePawnInteractionComponent::HoldInteractionStart(UCISInteractionCom
 			false
 		);
 
-		SharedInteractionRunningProcess.HoldInteractionDelegateHandle = SharedInteractionRunningProcess.SelectedFocusComponent->OnFocusLostDelegate.AddUObject(
-			this,
-			&ThisClass::OnHoldObjectFocusLostCallback
-		);
+		// set up callbacks
+		{
+			SharedInteractionRunningProcess.HoldInteractionDelegateHandle = SharedInteractionRunningProcess.SelectedFocusComponent->OnFocusLostDelegate.AddUObject(
+				this,
+				&ThisClass::OnHoldObjectFocusLostCallback
+			);
 
+			InteractionComponent->OnInteractableStateChangedDelegate.AddUniqueDynamic(
+				this, &ThisClass::OnCurrentHoldInteractableStateChanged);
+		}
 		InteractionComponent->TriggerOnHoldInteractionStarted(
 			OwnerSourcePawn.Get(),
 			SourceInteractionTags,
@@ -393,7 +471,7 @@ bool UCISSourcePawnInteractionComponent::HoldInteractionStart(UCISInteractionCom
 			HoldFragment->HoldTime
 		);
 
-		// TODO (log)
+		CIS_LOG_D("Hold Interaction Started")
 
 		return true;
 	}
@@ -406,7 +484,7 @@ bool UCISSourcePawnInteractionComponent::HoldInteractionStart(UCISInteractionCom
 			HoldFragment->HoldTime
 		);
 
-		// TODO (log)
+		CIS_LOG_D("Hold Interaction couldn't start because conditions failed")
 		
 		return false;
 	}
@@ -417,17 +495,54 @@ void UCISSourcePawnInteractionComponent::OnHoldObjectFocusLostCallback(APawn* So
 	// cancel hold if running
 	if (IsHoldRunning())
 	{
-		// TODO (log)
+		CIS_LOG_D("User was performing hold interaction but object lost focus, canceling hold")
+		CancelHoldInteraction();
+	}
+}
+
+void UCISSourcePawnInteractionComponent::OnCurrentHoldInteractableStateChanged(bool bNewState)
+{
+	// cancel hold if running
+	if (!bNewState && IsHoldRunning())
+	{
+		CIS_LOG_D("Target interaction component became unusable while user was performing interaction, canceling hold")
 		CancelHoldInteraction();
 	}
 }
 
 void UCISSourcePawnInteractionComponent::OnHoldInteractionFinished(bool bSuccess)
 {
-	// TODO (log)
+	CIS_LOG_D("Hold interaction finished (Success: {0})", bSuccess)
+	
+	const auto* HoldFragment = SharedInteractionRunningProcess.InteractionComponent->GetFragment<FCISInteractionFragmentHold>();
+	ensureAlways(HoldFragment);
+
+	// unsubscribe to delegates
+	{
+		SharedInteractionRunningProcess.SelectedFocusComponent->OnFocusLostDelegate.Remove(SharedInteractionRunningProcess.HoldInteractionDelegateHandle);
+		
+		SharedInteractionRunningProcess.InteractionComponent->OnInteractableStateChangedDelegate.RemoveDynamic(
+			this, &ThisClass::OnCurrentHoldInteractableStateChanged);
+	}
 	
 	SharedInteractionRunningProcess.bHoldInteractionFinished = true;
 	SharedInteractionRunningProcess.bHoldInteractionSuccessful = bSuccess;
+
+	// handle unblocking movement/look input
+	{
+		auto* OwnerPlayerController = OwnerSourcePawn->GetController();
+		if (IsValid(OwnerPlayerController))
+		{
+			if (HoldFragment->bDisableMovementInputWhileHold)
+			{
+				OwnerPlayerController->SetIgnoreMoveInput(false);
+			}
+			if (HoldFragment->bDisableLookInputWhileHold)
+			{
+				OwnerPlayerController->SetIgnoreLookInput(false);
+			}
+		}
+	}
 	
 	if (bSuccess)
 	{
@@ -453,14 +568,14 @@ void UCISSourcePawnInteractionComponent::OnAbilityEnded(const FAbilityEndedData&
 
 	if (IsHoldRunning())
 	{
-		// TODO (log)
+		CIS_LOG_D("Interaction Ability ended while user was performing a hold interaction, canceling the hold")
 		CancelHoldInteraction();
 	}
 }
 
 void UCISSourcePawnInteractionComponent::CancelHoldInteraction()
 {
-	// TODO (log)
+	CIS_LOG_D("Canceling current hold interaction")
 	
 	check(SharedInteractionRunningProcess.bRunning && SharedInteractionRunningProcess.IsHold());
 
@@ -520,7 +635,9 @@ void UCISSourcePawnInteractionComponent::TryFocus()
 		}
 
 		// fastest check first
-		if (PreviousTryFocusData.FocusedBestFocusComponent.IsValid() && !CurrentTryFocusData.FocusedBestFocusComponent.IsValid())
+		if (PreviousTryFocusData.FocusedBestFocusComponent.IsValid()
+			&& !CurrentTryFocusData.FocusedBestFocusComponent.IsValid()
+			&& PreviousTryFocusData.FocusedBestFocusComponent->IsFocusedBy(OwnerSourcePawn.Get()))
 		{
 			PreviousTryFocusData.FocusedBestFocusComponent->StopFocus();
 		}
@@ -534,7 +651,8 @@ void UCISSourcePawnInteractionComponent::TryFocus()
 			if (PreviousTryFocusData.FocusedBestFocusComponent.IsValid())
 			{
 				// dont need to stop if it never started
-				if (PreviousTryFocusData.bFocusResult)
+				if (PreviousTryFocusData.bFocusResult
+					&& PreviousTryFocusData.FocusedBestFocusComponent->IsFocusedBy(OwnerSourcePawn.Get()))
 				{
 					PreviousTryFocusData.FocusedBestFocusComponent->StopFocus();
 				}
@@ -549,7 +667,8 @@ void UCISSourcePawnInteractionComponent::TryFocus()
 			}
 		}
 	}
-	else if (PreviousTryFocusData.FocusedBestFocusComponent.IsValid())
+	else if (PreviousTryFocusData.FocusedBestFocusComponent.IsValid()
+		&& PreviousTryFocusData.FocusedBestFocusComponent->IsFocusedBy(OwnerSourcePawn.Get()))
 	{
 		PreviousTryFocusData.FocusedBestFocusComponent->StopFocus();
 	}

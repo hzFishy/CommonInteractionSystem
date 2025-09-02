@@ -98,6 +98,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Interaction")
 	TSoftClassPtr<UCISInteractionGameplayAbility> InteractionAbilityClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CommonInteractionSystem|Interaction")
+	bool bAsyncLoadInteractionAbilityClass;
 	
 	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Focus")
 	bool bCanFocus;
@@ -122,6 +125,10 @@ protected:
 	/// Focus
 	FHitResult LastFocusSweepResult;
 	FCISFocusFrameData PreviousTryFocusData;
+	/**
+	 * Focus Data of current TryFocus execution, this is only valid inside the function.
+	 * see PreviousTryFocusData for external use
+	 */
 	FCISFocusFrameData CurrentTryFocusData;
 
 	
@@ -158,7 +165,10 @@ protected:
 	----------------------------------------------------------------------------*/
 public:
 	UFUNCTION(BlueprintCallable, Category="CommonInteractionSystem|Interaction")
-	void OnInputSingleAndHoldInteractionStart(FGameplayTagContainer SourceInteractionTags);
+	void OnInputSingleInteraction(FGameplayTagContainer SourceInteractionTags);
+	
+	UFUNCTION(BlueprintCallable, Category="CommonInteractionSystem|Interaction")
+	void OnInputStartHoldInteraction(FGameplayTagContainer SourceInteractionTags);
 	
 	UFUNCTION(BlueprintCallable, Category="CommonInteractionSystem|Interaction")
 	void OnInputHoldInteractionEnd();
@@ -169,6 +179,8 @@ public:
 	bool TryInteraction(const FGameplayTagContainer& SourceInteractionTags);
 	
 protected:
+	void OnInputSingleOrHandleInteractionStart(UCISInteractionComponent* InteractionComponent, const FGameplayTag& InteractionTypeTag, const FGameplayTagContainer& SourceInteractionTags);
+	
 	bool IsHoldRunning() const;
 	
 	bool HoldInteractionStart(UCISInteractionComponent* InteractionComponent, const FGameplayTagContainer& SourceInteractionTags);
@@ -178,6 +190,9 @@ protected:
 	 * isn't focused anymore
 	 */
 	void OnHoldObjectFocusLostCallback(APawn* SourcePawn);
+
+	/** Callback from the current target interaction component for a hold interaction */
+	UFUNCTION() void OnCurrentHoldInteractableStateChanged(bool bNewState);
 	
 	/** Called once the hold time passed or if canceled */
 	void OnHoldInteractionFinished(bool bSuccess);

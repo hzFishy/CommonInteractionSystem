@@ -3,7 +3,9 @@
 
 #include "Interaction/Abilities/CISInteractionGameplayAbility.h"
 
+#include "CommonInteractionSystem.h"
 #include "Interaction/Data/TargetData/CISInteractionTargetData.h"
+#include "Logging/FULogging.h"
 #include "Shared/Component/CISSourcePawnInteractionComponent.h"
 #include "Shared/Data/CISCoreTypes.h"
 
@@ -22,7 +24,7 @@ const UCISInteractionAbilityEventData* UCISInteractionGameplayAbility::GetIntera
 
 void UCISInteractionGameplayAbility::ExecuteInteraction(const FGameplayTagContainer& SourceInteractionTags)
 {
-	// TODO (log)
+	CIS_LOG_D("ExecuteInteraction called, TryInteraction will be called")
 	if (auto* Avatar = GetAvatarActorFromActorInfo())
 	{
 		if (auto* InteractionComponent = Avatar->FindComponentByClass<UCISSourcePawnInteractionComponent>())

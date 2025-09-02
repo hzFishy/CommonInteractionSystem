@@ -19,6 +19,7 @@ UCISFocusComponent::UCISFocusComponent():
 	IconFocusTag(GetDefault<UCISCoreDeveloperSettings>()->DefaultFocusIconTag),
 	bFocusableByDefault(true),
 	FocusWidgetClass(GetDefault<UCISCoreDeveloperSettings>()->DefaultFocusWidgetClass),
+	bAsyncLoadFocusWidgetClass(true),
 	bFocusable(false),
 	bIsFocused(false)
 {
@@ -46,8 +47,18 @@ void UCISFocusComponent::InitializeComponent()
 		FoundOwnerInteractionComponent->OnInteractableStateChangedDelegate.AddUniqueDynamic(this, &ThisClass::OnInteractableStateChanged);
 	}
 
-	// TODO (perf): async load warming up
-	LoadedFocusWidgetClass = FocusWidgetClass.LoadSynchronous();
+	if (bAsyncLoadFocusWidgetClass)
+	{
+		FocusWidgetClass.LoadAsync(FLoadSoftObjectPathAsyncDelegate::CreateWeakLambda(this,
+			[this](const FSoftObjectPath& Path, UObject* Object) mutable
+		{
+				LoadedFocusWidgetClass = Cast<UClass>(Object);
+		}));
+	}
+	else
+	{
+		LoadedFocusWidgetClass = FocusWidgetClass.LoadSynchronous();
+	}
 }
 
 
@@ -109,7 +120,7 @@ void UCISFocusComponent::StartFocus(APawn* SourcePawn, const FGameplayTagContain
 void UCISFocusComponent::StopFocus()
 {
 	// if we are not focusing do nothing
-	if (ensure(!bIsFocused)) { return; }
+	if (!ensure(bIsFocused)) { return; }
 	
 	bIsFocused = false;
 	auto* OldSourcePawn = FocusingSourcePawn.Get();

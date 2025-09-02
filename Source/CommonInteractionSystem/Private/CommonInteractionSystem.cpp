@@ -2,6 +2,8 @@
 
 #include "CommonInteractionSystem.h"
 
+DEFINE_LOG_CATEGORY(LogCommonInteractionSystem);
+
 #define LOCTEXT_NAMESPACE "FCommonInteractionSystemModule"
 
 void FCommonInteractionSystemModule::StartupModule()

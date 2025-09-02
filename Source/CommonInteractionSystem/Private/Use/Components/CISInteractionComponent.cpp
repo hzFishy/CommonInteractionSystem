@@ -6,7 +6,7 @@
 #include "Asserts/FUAsserts.h"
 #include "Focus/Components/CISFocusComponent.h"
 #include "Interaction/Data/Fragments/Derived/CISUseFragmentSingle.h"
-#include "Interaction/Data/Fragments/Derived/FBPGUseFragmentHold.h"
+#include "Interaction/Data/Fragments/Derived/CISUseFragmentHold.h"
 #include "Logging/FULogging.h"
 #include "Shared/Interfaces/CISInteractionCustomization.h"
 
@@ -104,11 +104,6 @@ void UCISInteractionComponent::SetInteractable(bool bNewValue)
 	if (bInteractable == bNewValue) { return; }
 	
 	bInteractable = bNewValue;
-
-	if (!bInteractable && IsHoldType())
-	{
-		// TODO: cancel running hold interaction
-	}
 
 	OnInteractableStateChangedDelegate.Broadcast(bInteractable);
 }

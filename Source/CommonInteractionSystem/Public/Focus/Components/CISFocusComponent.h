@@ -47,6 +47,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CommonInteractionSystem|Setup")
 	TSoftClassPtr<UCISFocusWidget> FocusWidgetClass;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CommonInteractionSystem|Setup")
+	bool bAsyncLoadFocusWidgetClass;
+	
 	
 	TWeakObjectPtr<UCISInteractionComponent> FoundOwnerInteractionComponent;
 	
@@ -89,6 +92,9 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category="CommonInteractionSystem|Focus")
 	bool IsFocused() const { return bIsFocused; };
+	
+	UFUNCTION(BlueprintPure, Category="CommonInteractionSystem|Focus")
+	bool IsFocusedBy(APawn* SourcePawn) const { return bIsFocused && FocusingSourcePawn.Get() == SourcePawn; };
 	
 	UFUNCTION(BlueprintPure, Category="CommonInteractionSystem|Focus")
 	APawn* GetFocusingSourcePawn() const { return FocusingSourcePawn.Get(); };
