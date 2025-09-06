@@ -137,8 +137,7 @@ public:
 	virtual void SetInteractable(bool bNewValue);
 	
 	UFUNCTION(BlueprintCallable, Category="CommonInteractionSystem|Interaction")
-	virtual bool TryInteract(APawn* SourcePawn, const FGameplayTag& SourceInteractionTagType,
-	                         FGameplayTagContainer SourceInteractionTags);
+	virtual bool TryInteract(APawn* SourcePawn, FCISInteractionParams& InteractionParams);
 
 	virtual void OnInteraction(APawn* SourcePawn, const FGameplayTag& SourceInteractionTagType,
 		const FGameplayTagContainer& SourceInteractionTags, bool bCanInteractResult);
@@ -148,7 +147,7 @@ public:
 		const FGameplayTagContainer& SourceInteractionTags, bool bCanInteractResult);
 	
 	UFUNCTION(BlueprintPure, Category="CommonInteractionSystem|Interaction")
-	virtual bool CanInteractWith(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags) const;
+	virtual bool CanInteractWith(APawn* SourcePawn, FCISInteractionParams& InteractionParams) const;
 
 	void TriggerOnHoldInteractionStarted(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags,
 		bool bInteractionSucceeded, float TimeToHold);

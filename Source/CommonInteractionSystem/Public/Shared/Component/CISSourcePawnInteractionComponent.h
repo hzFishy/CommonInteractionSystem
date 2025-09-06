@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "Abilities/GameplayAbilityTypes.h"
 #include "Components/ActorComponent.h"
+#include "Shared/Data/CISCoreTypes.h"
 #include "CISSourcePawnInteractionComponent.generated.h"
 class UAbilitySystemComponent;
 class UCISInteractionGameplayAbility;
@@ -183,7 +184,7 @@ protected:
 	
 	bool IsHoldRunning() const;
 	
-	bool HoldInteractionStart(UCISInteractionComponent* InteractionComponent, const FGameplayTagContainer& SourceInteractionTags);
+	bool HoldInteractionStart(UCISInteractionComponent* InteractionComponent, FCISInteractionParams& InteractionParams);
 
 	/**
 	 * Called when an object we were starting holding

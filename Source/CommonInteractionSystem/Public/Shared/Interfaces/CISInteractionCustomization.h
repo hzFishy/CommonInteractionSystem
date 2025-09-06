@@ -16,7 +16,7 @@ class UCISInteractionCustomization : public UInterface
 
 
 /**
- * Extra settings pulled from this interface that interactable actors can implement 
+ * Interface that interactable actors can implement 
  */
 class COMMONINTERACTIONSYSTEM_API ICISInteractionCustomization
 {
@@ -27,7 +27,7 @@ public:
 	 * Used when we try to interact with an actor
 	 */
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="CommonInteractionSystem")
-	bool CanInteractWith(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags) const;
+	bool CanInteractWith(APawn* SourcePawn, FCISInteractionParams& InteractionParams) const;
 
 	/**
 	 * Should we show the focus widget when StartFocus is called ?

@@ -23,10 +23,11 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_CIS_Shared_Icons_DefaultInteraction, "CIS.Shared.Icon
 		Types
 	----------------------------------------------------------------------------*/
 FCISInteractionFocusParams::FCISInteractionFocusParams():
-	bIsTest(false)
-{}
+	bIsTest(false), FocusHitResult(nullptr) {}
 
 const FText& FCISInteractionFocusParams::GetFinalFocusText() const
 {
 	return OverrideText.IsEmpty() ? DefaultText : OverrideText;
 }
+
+FCISInteractionParams::FCISInteractionParams(): HitResult(nullptr) {}

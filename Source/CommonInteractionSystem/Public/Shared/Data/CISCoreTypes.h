@@ -48,6 +48,7 @@ struct COMMONINTERACTIONSYSTEM_API FCISInteractionFocusParams
 	 * Use this to skip heaving code only meant for real focus logic
 	 */
 	bool bIsTest;
+	const FHitResult* FocusHitResult;
 	/** If no override this text will be used */
 	FText DefaultText;
 	/** Tags passed from Pawn Interaction Component */
@@ -62,4 +63,21 @@ struct COMMONINTERACTIONSYSTEM_API FCISInteractionFocusParams
 
 	/** Get the end focus text */
 	const FText& GetFinalFocusText() const;
+};
+
+USTRUCT(BlueprintType, DisplayName="Interaction Params")
+struct COMMONINTERACTIONSYSTEM_API FCISInteractionParams
+{
+	GENERATED_BODY()
+
+	FCISInteractionParams();
+
+	
+	/////////////////////////////
+	/// In
+	
+	const FHitResult* HitResult;
+	FGameplayTag SourceInteractionTagType;
+	/** Tags passed from Pawn Interaction Component */
+	FGameplayTagContainer SourceInteractionTags;
 };

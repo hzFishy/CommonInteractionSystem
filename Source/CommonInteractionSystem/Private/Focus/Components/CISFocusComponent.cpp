@@ -85,12 +85,13 @@ void UCISFocusComponent::SetIconFocusTag(const FGameplayTag& NewIconFocusTag)
 	}
 }
 
-void UCISFocusComponent::StartFocus(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags)
+void UCISFocusComponent::StartFocus(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, const FHitResult& FocusHitResult)
 {
 	// skip if already focused
 	if (!ensure(!bIsFocused)) { return; }
 	
 	FCISInteractionFocusParams FocusParams;
+	FocusParams.FocusHitResult = &FocusHitResult;
 	FocusParams.DefaultText = FocusText;
 	FocusParams.SourceInteractionTags = SourceInteractionTags;
 	if (!CanFocus(SourcePawn, FocusParams)) { return; }
@@ -108,6 +109,7 @@ void UCISFocusComponent::StartFocus(APawn* SourcePawn, const FGameplayTagContain
 				if (auto* WorldSpaceWidgetsSubsystem = LC->GetSubsystem<UFWSWorldSpaceLocalSubsystem>())
 				{
 					FFWSWorldSpaceSubsystemParams SubsystemParams;
+					// TODO: It could be more interesting to create the focus widget more early and keep it hidden until desired
 					SubsystemParams.TargetUserWidget = CreateFocusWidget(FocusParams);
 					SubsystemParams.TargetSceneComponent = this;
 					WorldSpaceWidgetsSubsystem->AddWorldSpaceWidget(SubsystemParams);
@@ -125,8 +127,10 @@ void UCISFocusComponent::StopFocus()
 	bIsFocused = false;
 	auto* OldSourcePawn = FocusingSourcePawn.Get();
 	FocusingSourcePawn.Reset();
-
+	
+	// TODO: It could be more interesting to keep the widget hidden until desired
 	FocusWidget->RemoveFromParent();
+	FocusWidget = nullptr;
 	
 	OnFocusLostDelegate.Broadcast(OldSourcePawn);
 }
@@ -137,7 +141,10 @@ bool UCISFocusComponent::CanFocus(APawn* SourcePawn, FCISInteractionFocusParams&
 	if (!bFocusable || !FoundOwnerInteractionComponent.IsValid()) { return false; }
 	
 	// check if interaction component accepts the source
-	bool bResult = FoundOwnerInteractionComponent->CanInteractWith(FocusingSourcePawn.Get(), FGameplayTagContainer());
+	FCISInteractionParams InteractionParams;
+	InteractionParams.HitResult = InteractionFocusParams.FocusHitResult;
+	InteractionParams.SourceInteractionTags = InteractionFocusParams.SourceInteractionTags;
+	bool bResult = FoundOwnerInteractionComponent->CanInteractWith(FocusingSourcePawn.Get(), InteractionParams);
 	
 	if (bResult)
 	{
@@ -153,17 +160,22 @@ bool UCISFocusComponent::CanFocus(APawn* SourcePawn, FCISInteractionFocusParams&
 
 UUserWidget* UCISFocusComponent::CreateFocusWidget(const FCISInteractionFocusParams& FocusParams)
 {
-	FocusWidget = CreateWidget<UCISFocusWidget>(GetWorld(), LoadedFocusWidgetClass);
-	UpdateFocusWidgetContent(FocusParams);
-	FocusWidget->AddToViewport();
+	if (FU_ENSURE_VALID_MSG(LoadedFocusWidgetClass, "LoadedFocusWidgetClass is invalid"))
+	{
+		FocusWidget = CreateWidget<UCISFocusWidget>(GetWorld(), LoadedFocusWidgetClass);
+		UpdateFocusWidgetContent(FocusParams);
+		FocusWidget->AddToViewport();
+	}
 
 	return FocusWidget.Get();
 }
 
 void UCISFocusComponent::UpdateFocusWidgetContent(const FCISInteractionFocusParams& FocusParams)
 {
-	FocusWidget->UpdateContent(FocusParams.GetFinalFocusText(), IconFocusTag);
-
+	if (IsValid(FocusWidget.Get()))
+	{
+		FocusWidget->UpdateContent(FocusParams.GetFinalFocusText(), IconFocusTag);
+	}
 }
 
 void UCISFocusComponent::RefreshFocusWidget(bool bCheckFocusStatus)

@@ -109,7 +109,7 @@ public:
 	virtual void SetIconFocusTag(const FGameplayTag& NewIconFocusTag);
 
 	/** Start focusing this focus component, can fail */
-	virtual void StartFocus(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags);
+	virtual void StartFocus(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, const FHitResult& FocusHitResult);
 
 	/** Stop focusing this focus component */
 	virtual void StopFocus();

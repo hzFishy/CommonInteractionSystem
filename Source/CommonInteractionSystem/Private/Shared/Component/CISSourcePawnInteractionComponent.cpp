@@ -17,6 +17,7 @@
 #include "CommonInteractionSystem.h"
 #include "Draw/FUDraw.h"
 #include "Logging/FULogging.h"
+#include "Shared/Interfaces/CISInteractableComponent.h"
 #include "Utility/FUOrientedBox.h"
 
 
@@ -329,30 +330,47 @@ bool UCISSourcePawnInteractionComponent::TryInteraction(const FGameplayTagContai
 	if (InteractionStartPoint.IsValid())
 	{
 		AActor* HitActor = nullptr;
-		FHitResult Result;
-		DoSharedInteractionTrace(Result, false);
-		if (IsValid(Result.GetActor()))
+		FHitResult HitResult;
+		DoSharedInteractionTrace(HitResult, false);
+		if (IsValid(HitResult.GetActor()))
 		{
-			HitActor = Result.GetActor();
+			HitActor = HitResult.GetActor();
 		}
 		
 		if (IsValid(HitActor))
 		{
-			auto* InteractionComponent = HitActor->FindComponentByClass<UCISInteractionComponent>();
+			FCISInteractionParams InteractionParams;
+			InteractionParams.HitResult = &HitResult;
+			InteractionParams.SourceInteractionTags = SourceInteractionTags;
 
+			// handle the interface
+			{
+				if (HitResult.Component.IsValid() && HitResult.GetComponent()->Implements<UCISInteractableComponent>())
+				{
+					const bool bResult = ICISInteractableComponent::Execute_OnInteraction(HitResult.GetComponent(), OwnerSourcePawn.Get(), SourceInteractionTags, HitResult);
+					if (bResult)
+					{
+						return true;
+					}
+				}
+			}
+			
+			auto* InteractionComponent = HitActor->FindComponentByClass<UCISInteractionComponent>();
 			if (IsValid(InteractionComponent))
 			{
 				if (InteractionComponent->IsSingleType())
 				{
 					CIS_LOG_D("Trying to single interact with {0}", *FU::Utils::GetObjectDetailedName(InteractionComponent));
+					InteractionParams.SourceInteractionTagType = TAG_CIS_Interaction_Types_Single;
 					return InteractionComponent->TryInteract(
 						OwnerSourcePawn.Get(),
-						TAG_CIS_Interaction_Types_Single,
-						SourceInteractionTags
+						InteractionParams
 					);
 				}
 				else if (InteractionComponent->IsHoldType())
 				{
+					InteractionParams.SourceInteractionTagType = TAG_CIS_Interaction_Types_Hold;
+
 					// detect if hold finished (if we started it previously)
 					if (IsHoldRunning() && SharedInteractionRunningProcess.bHoldInteractionFinished)
 					{
@@ -362,8 +380,7 @@ bool UCISSourcePawnInteractionComponent::TryInteraction(const FGameplayTagContai
 						// interaction could still fail here if something changed in game while the hold was done
 						return InteractionComponent->TryInteract(
 							OwnerSourcePawn.Get(),
-							TAG_CIS_Interaction_Types_Hold,
-							SourceInteractionTags
+							InteractionParams
 						);
 					}
 					// dont use if already using
@@ -371,7 +388,7 @@ bool UCISSourcePawnInteractionComponent::TryInteraction(const FGameplayTagContai
 
 					CIS_LOG_D("Starting hold interaction process with {0}", *FU::Utils::GetObjectDetailedName(InteractionComponent));
 					// otherwise start a hold operation
-					return HoldInteractionStart(InteractionComponent, SourceInteractionTags);
+					return HoldInteractionStart(InteractionComponent, InteractionParams);
 				}
 			}
 		}
@@ -416,9 +433,9 @@ bool UCISSourcePawnInteractionComponent::IsHoldRunning() const
 	return SharedInteractionRunningProcess.bRunning && SharedInteractionRunningProcess.IsHold();
 }
 
-bool UCISSourcePawnInteractionComponent::HoldInteractionStart(UCISInteractionComponent* InteractionComponent, const FGameplayTagContainer& SourceInteractionTags)
+bool UCISSourcePawnInteractionComponent::HoldInteractionStart(UCISInteractionComponent* InteractionComponent, FCISInteractionParams& InteractionParams)
 {
-	bool bCanInteractResult = InteractionComponent->CanInteractWith(OwnerSourcePawn.Get(), SourceInteractionTags);
+	bool bCanInteractResult = InteractionComponent->CanInteractWith(OwnerSourcePawn.Get(), InteractionParams);
 	const auto* HoldFragment = InteractionComponent->GetFragment<FCISInteractionFragmentHold>();
 	
 	if (bCanInteractResult && ensureAlways(HoldFragment))
@@ -466,7 +483,7 @@ bool UCISSourcePawnInteractionComponent::HoldInteractionStart(UCISInteractionCom
 		}
 		InteractionComponent->TriggerOnHoldInteractionStarted(
 			OwnerSourcePawn.Get(),
-			SourceInteractionTags,
+			InteractionParams.SourceInteractionTags,
 			true,
 			HoldFragment->HoldTime
 		);
@@ -479,7 +496,7 @@ bool UCISSourcePawnInteractionComponent::HoldInteractionStart(UCISInteractionCom
 	{
 		InteractionComponent->TriggerOnHoldInteractionStarted(
 			OwnerSourcePawn.Get(),
-			SourceInteractionTags,
+			InteractionParams.SourceInteractionTags,
 			false,
 			HoldFragment->HoldTime
 		);
@@ -630,6 +647,7 @@ void UCISSourcePawnInteractionComponent::TryFocus()
 			{
 				FCISInteractionFocusParams Params;
 				Params.bIsTest = true;
+				Params.FocusHitResult = &LastFocusSweepResult;
 				CurrentTryFocusData.bFocusResult = CurrentTryFocusData.FocusedBestFocusComponent->CanFocus(OwnerSourcePawn.Get(), Params);
 			}
 		}
@@ -663,7 +681,7 @@ void UCISSourcePawnInteractionComponent::TryFocus()
 			{
 				FGameplayTagContainer Tags;
 				GetFocusInteractionTags(Tags);
-				CurrentTryFocusData.FocusedBestFocusComponent->StartFocus(OwnerSourcePawn.Get(), Tags);
+				CurrentTryFocusData.FocusedBestFocusComponent->StartFocus(OwnerSourcePawn.Get(), Tags, LastFocusSweepResult);
 			}
 		}
 	}

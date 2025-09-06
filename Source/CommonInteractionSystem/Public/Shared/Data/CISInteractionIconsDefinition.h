@@ -17,7 +17,7 @@ class COMMONINTERACTIONSYSTEM_API UCISInteractionIconsDefinition : public UPrima
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CommonInteractionSystem")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CommonInteractionSystem", meta=(ForceInlineRow, Categories="CIS.Shared.Icons"))
 	TMap<FGameplayTag, TSoftObjectPtr<UTexture2D>> Icons;
 
 	UFUNCTION(BlueprintPure, Category = "CommonInteractionSystem")

@@ -108,11 +108,11 @@ void UCISInteractionComponent::SetInteractable(bool bNewValue)
 	OnInteractableStateChangedDelegate.Broadcast(bInteractable);
 }
 
-bool UCISInteractionComponent::TryInteract(APawn* SourcePawn, const FGameplayTag& SourceInteractionTagType, FGameplayTagContainer SourceInteractionTags)
+bool UCISInteractionComponent::TryInteract(APawn* SourcePawn, FCISInteractionParams& InteractionParams)
 {
-	bool bCanInteract = CanInteractWith(SourcePawn, SourceInteractionTags);
+	bool bCanInteract = CanInteractWith(SourcePawn, InteractionParams);
 
-	AppendInteractionTags(SourceInteractionTags);
+	AppendInteractionTags(InteractionParams.SourceInteractionTags);
 	
 	if (IsSingleType())
 	{
@@ -121,15 +121,15 @@ bool UCISInteractionComponent::TryInteract(APawn* SourcePawn, const FGameplayTag
 		{
 			OnInteraction(
 				SourcePawn, 
-				SourceInteractionTagType,
-				SourceInteractionTags, 
+				InteractionParams.SourceInteractionTagType,
+				InteractionParams.SourceInteractionTags, 
 				bCanInteract
 			);
 			
 			OnSingleInteractionDelegate.Broadcast(
 				this,
 				SourcePawn,
-				SourceInteractionTags,
+				InteractionParams.SourceInteractionTags,
 				bCanInteract
 			);
 		}
@@ -141,14 +141,14 @@ bool UCISInteractionComponent::TryInteract(APawn* SourcePawn, const FGameplayTag
 		{
 			OnInteraction(
 				SourcePawn,
-				SourceInteractionTagType,
-				SourceInteractionTags,
+				InteractionParams.SourceInteractionTagType,
+				InteractionParams.SourceInteractionTags,
 				bCanInteract
 			);
 
 			TriggerOnHoldInteractionEnded(
 				SourcePawn,
-				SourceInteractionTags,
+				InteractionParams.SourceInteractionTags,
 				bCanInteract
 			);
 		}
@@ -163,7 +163,7 @@ void UCISInteractionComponent::OnInteraction(APawn* SourcePawn, const FGameplayT
 	K2_OnInteraction(SourcePawn, SourceInteractionTagType, SourceInteractionTags, bCanInteractResult);
 }
 
-bool UCISInteractionComponent::CanInteractWith(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags) const
+bool UCISInteractionComponent::CanInteractWith(APawn* SourcePawn, FCISInteractionParams& InteractionParams) const
 {
 	if (!bInteractable) { return false; }
 
@@ -178,7 +178,7 @@ bool UCISInteractionComponent::CanInteractWith(APawn* SourcePawn, const FGamepla
 	// get potential extra settings
 	if (GetOwner()->Implements<UCISInteractionCustomization>())
 	{
-		return ICISInteractionCustomization::Execute_CanInteractWith(GetOwner(), SourcePawn, SourceInteractionTags);
+		return ICISInteractionCustomization::Execute_CanInteractWith(GetOwner(), SourcePawn, InteractionParams);
 	}
 
 	return true;
