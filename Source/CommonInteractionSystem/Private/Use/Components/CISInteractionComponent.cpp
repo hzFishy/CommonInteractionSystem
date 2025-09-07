@@ -171,7 +171,10 @@ bool UCISInteractionComponent::CanInteractWith(APawn* SourcePawn, FCISInteractio
 	// this overrides any other extra settings
 	if (MaxInteractionRangeOverride.IsSet())
 	{
-		float Distance = FVector::Distance(SourcePawn->GetActorLocation(), GetOwner()->GetActorLocation());
+		FVector EyesLoc;
+		FRotator EyesRot;
+		SourcePawn->GetActorEyesViewPoint(EyesLoc, EyesRot);
+		float Distance = FVector::Distance(EyesLoc, InteractionParams.ConsideredFocusComponent->GetComponentLocation());
 		return Distance <= MaxInteractionRangeOverride.GetValue();
 	}
 	

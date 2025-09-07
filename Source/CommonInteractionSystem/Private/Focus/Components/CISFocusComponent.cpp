@@ -144,14 +144,15 @@ bool UCISFocusComponent::CanFocus(APawn* SourcePawn, FCISInteractionFocusParams&
 	FCISInteractionParams InteractionParams;
 	InteractionParams.HitResult = InteractionFocusParams.FocusHitResult;
 	InteractionParams.SourceInteractionTags = InteractionFocusParams.SourceInteractionTags;
-	bool bResult = FoundOwnerInteractionComponent->CanInteractWith(FocusingSourcePawn.Get(), InteractionParams);
+	InteractionParams.ConsideredFocusComponent = this;
+	bool bResult = FoundOwnerInteractionComponent->CanInteractWith(SourcePawn, InteractionParams);
 	
 	if (bResult)
 	{
 		// get potential extra settings
 		if (GetOwner()->Implements<UCISInteractionCustomization>())
 		{
-			bResult = ICISInteractionCustomization::Execute_CanFocusWith(GetOwner(), FocusingSourcePawn.Get(), InteractionFocusParams);
+			bResult = ICISInteractionCustomization::Execute_CanFocusWith(GetOwner(), SourcePawn, InteractionFocusParams);
 		}
 	}
 	

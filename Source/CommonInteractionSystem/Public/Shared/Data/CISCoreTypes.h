@@ -6,6 +6,7 @@
 #include "CISCoreTypes.generated.h"
 
 
+class UCISFocusComponent;
 	/*----------------------------------------------------------------------------
 		Logging
 	----------------------------------------------------------------------------*/
@@ -80,4 +81,5 @@ struct COMMONINTERACTIONSYSTEM_API FCISInteractionParams
 	FGameplayTag SourceInteractionTagType;
 	/** Tags passed from Pawn Interaction Component */
 	FGameplayTagContainer SourceInteractionTags;
+	TWeakObjectPtr<UCISFocusComponent> ConsideredFocusComponent;
 };

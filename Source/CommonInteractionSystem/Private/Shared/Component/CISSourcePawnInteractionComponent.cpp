@@ -358,6 +358,8 @@ bool UCISSourcePawnInteractionComponent::TryInteraction(const FGameplayTagContai
 			auto* InteractionComponent = HitActor->FindComponentByClass<UCISInteractionComponent>();
 			if (IsValid(InteractionComponent))
 			{
+				InteractionParams.ConsideredFocusComponent = InteractionComponent->GetBestFocusComponent(OwnerSourcePawn.Get());
+				
 				if (InteractionComponent->IsSingleType())
 				{
 					CIS_LOG_D("Trying to single interact with {0}", *FU::Utils::GetObjectDetailedName(InteractionComponent));
