@@ -22,6 +22,10 @@
 	],
 	"Plugins" : [
 		{
+			"Name": "GameplayAbilities",
+			"Enabled": true
+		},
+		{
 			"Name": "FishyUtils",
 			"Enabled": true
 		},
