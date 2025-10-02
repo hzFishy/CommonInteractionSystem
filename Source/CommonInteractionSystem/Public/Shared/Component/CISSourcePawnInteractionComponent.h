@@ -66,7 +66,11 @@ struct COMMONINTERACTIONSYSTEM_API FCISInteractionRunningProcess
 
 
 /**
- *	Interaction and focus.
+ *	Interaction and focus features for a pawn which has an ASC.
+ *	Use the various "On Input ..." functions to trigger the system.
+ *	
+ *	You must set the InteractionStartPoint with SetInteractionStartPoint.
+ *	The player HUD must implement UFWSWorldSpaceContainerWidgetGetter with GetWorldSpaceContainerWidget which returns a UFWSWorldSpaceContainerWidget.
  */
 UCLASS(ClassGroup=(CommonInteractionSystem), Blueprintable, DisplayName="Source Pawn Interaction Component", meta=(BlueprintSpawnableComponent))
 class COMMONINTERACTIONSYSTEM_API UCISSourcePawnInteractionComponent : public UActorComponent
@@ -96,7 +100,14 @@ protected:
 	/** Event tag used to trigger the interaction gameplay ability */
 	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Interaction", meta=(Categories="CIS.Interaction.Events"))
 	FGameplayTag InteractionAbilityEventTag;
-	
+
+	/**
+	 *  You have to implement "Activate Ability From Event" with InteractionAbilityEventTag.
+	 *  If the commit is successfull you can call ExecuteInteraction
+	 *  and use GetInteractionAbilityEventData to get the input tags.
+	 *  You need to end the ability if its sinle or let it run if hold,
+	 *  to know the type of the interaction read InteractionTagType on the optional object.
+	 */
 	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Interaction")
 	TSoftClassPtr<UCISInteractionGameplayAbility> InteractionAbilityClass;
 
@@ -180,7 +191,8 @@ public:
 	bool TryInteraction(const FGameplayTagContainer& SourceInteractionTags);
 	
 protected:
-	void OnInputSingleOrHandleInteractionStart(UCISInteractionComponent* InteractionComponent, const FGameplayTag& InteractionTypeTag, const FGameplayTagContainer& SourceInteractionTags);
+	void OnInputSingleOrHoldInteractionStart(UCISInteractionComponent* InteractionComponent,
+		const FGameplayTag& InteractionTypeTag, const FGameplayTagContainer& SourceInteractionTags);
 	
 	bool IsHoldRunning() const;
 	

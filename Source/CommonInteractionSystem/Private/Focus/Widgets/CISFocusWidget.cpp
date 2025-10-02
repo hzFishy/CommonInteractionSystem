@@ -14,7 +14,7 @@ void UCISFocusWidget::UpdateContent(const FText& FocusText, FGameplayTag IconFoc
 
 void UCISFocusWidget::OnSingleInteraction(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, bool bInteractionSucceeded)
 {
-	K2_OnSingleInteraction(SourcePawn, SourceInteractionTags);
+	K2_OnSingleInteraction(SourcePawn, SourceInteractionTags, bInteractionSucceeded);
 }
 
 void UCISFocusWidget::OnHoldInteractionStarted(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, bool bInteractionSucceeded, float TimeToHold)

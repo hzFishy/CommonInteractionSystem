@@ -34,7 +34,7 @@ protected:
 	void K2_UpdateContent(const FText& FocusText, FGameplayTag IconFocusTag);
 
 	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Single Interaction")
-	void K2_OnSingleInteraction(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags);
+	void K2_OnSingleInteraction(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, bool bInteractionSucceeded);
 
 	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Hold Interaction Started")
 	void K2_OnHoldInteractionStarted(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, bool bInteractionSucceeded, float TimeToHold);

@@ -9,7 +9,9 @@ class UCISInteractionAbilityEventData;
 
 
 /**
- * Process explained:
+ * For actual code ogic to implement see InteractionAbilityClass in UCISSourcePawnInteractionComponent.
+ *
+ * Internal process explained:
  * 
  * For Single Interaction:
  * - PawnComp: Input

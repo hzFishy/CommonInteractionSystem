@@ -127,10 +127,13 @@ void UCISFocusComponent::StopFocus()
 	bIsFocused = false;
 	auto* OldSourcePawn = FocusingSourcePawn.Get();
 	FocusingSourcePawn.Reset();
-	
-	// TODO: It could be more interesting to keep the widget hidden until desired
-	FocusWidget->RemoveFromParent();
-	FocusWidget = nullptr;
+
+	if (IsValid(FocusWidget.Get()))
+	{
+		// TODO (perf): It could be more interesting to keep the widget hidden until desired
+		FocusWidget->RemoveFromParent();
+		FocusWidget = nullptr;
+	}
 	
 	OnFocusLostDelegate.Broadcast(OldSourcePawn);
 }

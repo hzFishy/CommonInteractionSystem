@@ -268,7 +268,7 @@ void UCISSourcePawnInteractionComponent::OnInputSingleInteraction(FGameplayTagCo
 	{
 		if (InteractionComponent->IsSingleType())
 		{
-			OnInputSingleOrHandleInteractionStart(
+			OnInputSingleOrHoldInteractionStart(
 				InteractionComponent,
 				TAG_CIS_Interaction_Types_Single,
 				SourceInteractionTags
@@ -285,7 +285,7 @@ void UCISSourcePawnInteractionComponent::OnInputStartHoldInteraction(FGameplayTa
 	{
 		if (InteractionComponent->IsHoldType())
 		{
-			OnInputSingleOrHandleInteractionStart(
+			OnInputSingleOrHoldInteractionStart(
 				InteractionComponent,
 				TAG_CIS_Interaction_Types_Hold,
 				SourceInteractionTags
@@ -400,7 +400,7 @@ bool UCISSourcePawnInteractionComponent::TryInteraction(const FGameplayTagContai
 	return false;
 }
 
-void UCISSourcePawnInteractionComponent::OnInputSingleOrHandleInteractionStart(UCISInteractionComponent* InteractionComponent,
+void UCISSourcePawnInteractionComponent::OnInputSingleOrHoldInteractionStart(UCISInteractionComponent* InteractionComponent,
 	const FGameplayTag& InteractionTypeTag, const FGameplayTagContainer& SourceInteractionTags)
 {
 	if (FU_ENSURE_VALID(InteractionComponent))
