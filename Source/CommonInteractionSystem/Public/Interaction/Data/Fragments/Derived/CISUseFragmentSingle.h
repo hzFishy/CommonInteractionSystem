@@ -7,7 +7,7 @@
 #include "CISUseFragmentSingle.generated.h"
 
 
-USTRUCT(DisplayName="Interaction Fragment - Single", BlueprintType)
+USTRUCT(DisplayName="Single Interaction Fragment", BlueprintType)
 struct COMMONINTERACTIONSYSTEM_API FCISInteractionFragmentSingle : public FCISInteractionFragmentBase
 {
 	GENERATED_BODY();

@@ -7,7 +7,7 @@
 #include "CISUseFragmentHold.generated.h"
 
 
-USTRUCT(DisplayName="Interaction Fragment - Hold", BlueprintType)
+USTRUCT(DisplayName="Hold Interaction Fragment", BlueprintType)
 struct COMMONINTERACTIONSYSTEM_API FCISInteractionFragmentHold : public FCISInteractionFragmentBase
 {
 	GENERATED_BODY();

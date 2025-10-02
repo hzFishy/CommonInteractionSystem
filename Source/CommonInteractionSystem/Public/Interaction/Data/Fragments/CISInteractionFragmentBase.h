@@ -9,7 +9,7 @@
 /**
  *	Base struct for any interaction fragment 
  */
-USTRUCT(meta = (Hidden), BlueprintType)
+USTRUCT(meta = (Hidden), BlueprintType, DisplayName="Base Interaction Fragment")
 struct COMMONINTERACTIONSYSTEM_API FCISInteractionFragmentBase
 {
 	GENERATED_BODY();
