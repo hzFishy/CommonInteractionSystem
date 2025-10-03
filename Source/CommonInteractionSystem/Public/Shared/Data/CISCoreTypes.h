@@ -10,7 +10,7 @@ class UCISFocusComponent;
 	/*----------------------------------------------------------------------------
 		Logging
 	----------------------------------------------------------------------------*/
-COMMONINTERACTIONSYSTEM_API DECLARE_LOG_CATEGORY_EXTERN(LogCISValidation, Log, Log);
+COMMONINTERACTIONSYSTEM_API DECLARE_LOG_CATEGORY_EXTERN(LogCISValidation, Log, All);
 
 #define CIS_LOG_Validation_E(FORMAT, ...) FU_LOG_Validation_E(LogCISValidation, FORMAT, ##__VA_ARGS__);
 

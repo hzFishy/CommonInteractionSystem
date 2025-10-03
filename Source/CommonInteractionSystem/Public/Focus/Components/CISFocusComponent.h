@@ -26,7 +26,7 @@ class COMMONINTERACTIONSYSTEM_API UCISFocusComponent : public USceneComponent
 {
 	GENERATED_BODY()
 
-
+	
 	/*----------------------------------------------------------------------------
 		Properties
 	----------------------------------------------------------------------------*/
@@ -145,4 +145,6 @@ protected:
 	
 	UFUNCTION() void OnHoldInteractionEnded(UCISInteractionComponent* InteractionComponent, APawn* SourcePawn,
 		const FGameplayTagContainer& SourceInteractionTags, bool bHoldSucceeded);
+
+	UFUNCTION() void OnOwnerDestroyed(AActor* DestroyedActor);
 };

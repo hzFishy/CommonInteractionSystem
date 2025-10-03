@@ -59,6 +59,8 @@ void UCISFocusComponent::InitializeComponent()
 	{
 		LoadedFocusWidgetClass = FocusWidgetClass.LoadSynchronous();
 	}
+
+	GetOwner()->OnDestroyed.AddUniqueDynamic(this, &ThisClass::OnOwnerDestroyed);
 }
 
 
@@ -250,4 +252,9 @@ void UCISFocusComponent::OnHoldInteractionEnded(UCISInteractionComponent* Intera
 	{
 		FocusWidget->OnHoldInteractionEnded(SourcePawn, SourceInteractionTags, bHoldSucceeded);
 	}
+}
+
+void UCISFocusComponent::OnOwnerDestroyed(AActor* DestroyedActor)
+{
+	StopFocus();
 }
