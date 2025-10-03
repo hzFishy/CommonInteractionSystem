@@ -256,5 +256,8 @@ void UCISFocusComponent::OnHoldInteractionEnded(UCISInteractionComponent* Intera
 
 void UCISFocusComponent::OnOwnerDestroyed(AActor* DestroyedActor)
 {
-	StopFocus();
+	if (bIsFocused)
+	{
+		StopFocus();
+	}
 }
