@@ -80,7 +80,10 @@ protected:
 	/** Cached base interaction fragment */
 	const FCISInteractionFragmentBase* CachedBaseInteractionFragment;
 	/** All focus component we found after gather on init */
-	TArray<TWeakObjectPtr<UCISFocusComponent>> FoundFocusComponents;
+	UPROPERTY()
+	TArray<TObjectPtr<UCISFocusComponent>> FoundFocusComponents;
+	UPROPERTY()
+	TMap<TObjectPtr<UPrimitiveComponent>, TWeakObjectPtr<UCISFocusComponent>> PrimitiveToFocusCompBindings;
 
 
 	/*----------------------------------------------------------------------------
@@ -158,6 +161,6 @@ public:
 	void TriggerOnHoldInteractionEnded(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags,
 		bool bHoldSucceeded);
 	
-	/** Get closest focus component */
-	UCISFocusComponent* GetBestFocusComponent(APawn* SourcePawn) const;
+	/** See UCISFocusComponent declaration for more details */
+	UCISFocusComponent* GetBestFocusComponent(const FHitResult& HitResult, APawn* SourcePawn) const;
 };

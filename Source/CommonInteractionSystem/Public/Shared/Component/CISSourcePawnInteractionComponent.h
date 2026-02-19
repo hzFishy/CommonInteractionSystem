@@ -2,12 +2,12 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "GameplayAbilitySpecHandle.h"
 #include "GameplayTagContainer.h"
 #include "Abilities/GameplayAbilityTypes.h"
 #include "Components/ActorComponent.h"
 #include "Shared/Data/CISCoreTypes.h"
+#include "CommonInteractionSystem.h"
 #include "CISSourcePawnInteractionComponent.generated.h"
 class UAbilitySystemComponent;
 class UCISInteractionGameplayAbility;
@@ -26,7 +26,9 @@ struct COMMONINTERACTIONSYSTEM_API FCISFocusFrameData
 	bool bFocusResult;
 	TWeakObjectPtr<AActor> FocusedActor;
 	TWeakObjectPtr<UCISFocusComponent> FocusedBestFocusComponent;
-	
+#if CIS_WITH_DEBUG
+	TWeakObjectPtr<UPrimitiveComponent> HitPrimitiveComponent;
+#endif
 	void Reset();
 };
 

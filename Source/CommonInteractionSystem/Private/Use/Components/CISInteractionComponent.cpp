@@ -33,10 +33,7 @@ void UCISInteractionComponent::InitializeComponent()
 
 	CachedBaseInteractionFragment = GetFragment<FCISInteractionFragmentBase>();
 	
-	GetOwner()->ForEachComponent<UCISFocusComponent>(false, [this](UCISFocusComponent* Comp) mutable
-	{
-		FoundFocusComponents.Emplace(Comp);
-	});
+	GetOwner()->GetComponents<UCISFocusComponent>(FoundFocusComponents);
 	
 	// validity check
 #if WITH_EDITOR
@@ -47,8 +44,18 @@ void UCISInteractionComponent::InitializeComponent()
 			"Actor {0} owns a Interaction Component but doesn't have a Focus Component, must fix this",
 			FU_LOG_THIS
 		);
+		return;
 	}
 #endif
+	
+	// build primitive mapping
+	for (auto& FocusComponent : FoundFocusComponents)
+	{
+		for (auto& Link : FocusComponent->GetLinkedPrimitiveComponents())
+		{
+			PrimitiveToFocusCompBindings.Emplace(Link.GetComponent<UPrimitiveComponent>(GetOwner()), FocusComponent);
+		}
+	}
 }
 
 	
@@ -74,11 +81,7 @@ void UCISInteractionComponent::AppendInteractionTags(FGameplayTagContainer& OutI
 
 void UCISInteractionComponent::GetFoundFocusComponents(TArray<UCISFocusComponent*>& OutFocusComponents) const
 {
-	OutFocusComponents.Reserve(FoundFocusComponents.Num());
-	Algo::Transform(FoundFocusComponents, OutFocusComponents, [](const TWeakObjectPtr<UCISFocusComponent>& InWeak)
-	{
-		return InWeak.Get();
-	});
+	OutFocusComponents.Append(FoundFocusComponents);
 }
 
 bool UCISInteractionComponent::IsSingleType() const
@@ -210,23 +213,11 @@ void UCISInteractionComponent::TriggerOnHoldInteractionEnded(APawn* SourcePawn, 
 	);
 }
 
-UCISFocusComponent* UCISInteractionComponent::GetBestFocusComponent(APawn* SourcePawn) const
+UCISFocusComponent* UCISInteractionComponent::GetBestFocusComponent(const FHitResult& HitResult, APawn* SourcePawn) const
 {
-	if (FoundFocusComponents.IsEmpty()) { return nullptr; }
-	
-	UCISFocusComponent* BestComponent = nullptr;
-	float BestDistance = FLT_MAX;
-
-	for (int i = 0; i < FoundFocusComponents.Num(); ++i)
+	if (auto* Entry = PrimitiveToFocusCompBindings.Find(HitResult.Component.Get()))
 	{
-		auto* Component = FoundFocusComponents[i].Get();
-		float Distance = FVector::Distance(Component->GetComponentLocation(), SourcePawn->GetActorLocation());
-		if (Distance < BestDistance)
-		{
-			BestComponent = Component;
-			BestDistance = Distance;
-		}
+		return Entry->Get();
 	}
-
-	return BestComponent;
+	return nullptr;
 }

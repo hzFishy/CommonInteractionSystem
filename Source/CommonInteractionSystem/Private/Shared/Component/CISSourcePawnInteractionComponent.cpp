@@ -14,7 +14,6 @@
 #include "Interaction/Data/TargetData/CISInteractionTargetData.h"
 #include "Shared/Data/CISCoreTypes.h"
 #include "Utility/FUUtilities.h"
-#include "CommonInteractionSystem.h"
 #include "Draw/FUDraw.h"
 #include "Logging/FULogging.h"
 #include "Shared/Interfaces/CISInteractableComponent.h"
@@ -49,6 +48,9 @@ void FCISFocusFrameData::Reset()
 	FocusedActor.Reset();
 	FocusedBestFocusComponent.Reset();
 	bFocusResult = false;
+#if CIS_WITH_DEBUG
+	HitPrimitiveComponent.Reset();
+#endif
 }
 
 FCISInteractionRunningProcess::FCISInteractionRunningProcess():
@@ -164,12 +166,12 @@ void UCISSourcePawnInteractionComponent::TickComponent(float DeltaTime, ELevelTi
 				auto PreviousFocusedActorOrientedBox = FU::Utils::FFUOrientedBox(PreviousTryFocusData.FocusedActor.Get(), false);
 				PreviousFocusedActorOrientedBox.DrawDebugFrame(GetWorld(), FColor::Yellow);
 				
-				if (PreviousTryFocusData.FocusedBestFocusComponent.IsValid())
+				if (auto* HitComp = PreviousTryFocusData.HitPrimitiveComponent.Get())
 				{
-					FU::Draw::DrawDebugBoxFrame(GetWorld(),
-						PreviousTryFocusData.FocusedBestFocusComponent->GetComponentLocation(), 10,
-						PreviousTryFocusData.FocusedActor->GetActorRotation().Quaternion(),
-						PreviousTryFocusData.bFocusResult ? FColor::Green : FColor::Red, 0
+					FU::Utils::FFUOrientedBox HitCompBox(HitComp);
+					HitCompBox.DrawDebugFrame(
+						GetWorld(), 
+						PreviousTryFocusData.bFocusResult ? FColor::Green : FColor::Red
 					);
 				}
 			}
@@ -178,7 +180,7 @@ void UCISSourcePawnInteractionComponent::TickComponent(float DeltaTime, ELevelTi
 	}
 }
 
-
+	
 	/*----------------------------------------------------------------------------
 		Shared
 	----------------------------------------------------------------------------*/
@@ -358,7 +360,7 @@ bool UCISSourcePawnInteractionComponent::TryInteraction(const FGameplayTagContai
 			auto* InteractionComponent = HitActor->FindComponentByClass<UCISInteractionComponent>();
 			if (IsValid(InteractionComponent))
 			{
-				InteractionParams.ConsideredFocusComponent = InteractionComponent->GetBestFocusComponent(OwnerSourcePawn.Get());
+				InteractionParams.ConsideredFocusComponent = InteractionComponent->GetBestFocusComponent(*InteractionParams.HitResult, OwnerSourcePawn.Get());
 				
 				if (InteractionComponent->IsSingleType())
 				{
@@ -448,7 +450,7 @@ bool UCISSourcePawnInteractionComponent::HoldInteractionStart(UCISInteractionCom
 		SharedInteractionRunningProcess.bRunning = true;
 		SharedInteractionRunningProcess.InteractionTypeTag = TAG_CIS_Interaction_Types_Hold;
 		SharedInteractionRunningProcess.InteractionComponent = InteractionComponent;
-		SharedInteractionRunningProcess.SelectedFocusComponent = InteractionComponent->GetBestFocusComponent(OwnerSourcePawn.Get());
+		SharedInteractionRunningProcess.SelectedFocusComponent = InteractionComponent->GetBestFocusComponent(*InteractionParams.HitResult, OwnerSourcePawn.Get());
 
 		// handle blocking movement/look input
 		{
@@ -633,6 +635,9 @@ void UCISSourcePawnInteractionComponent::TryFocus()
 	
 	DoSharedInteractionTrace(LastFocusSweepResult, true);
 	CurrentTryFocusData.FocusedActor = LastFocusSweepResult.GetActor();
+#if CIS_WITH_DEBUG
+	CurrentTryFocusData.HitPrimitiveComponent = LastFocusSweepResult.GetComponent();
+#endif
 	
 	if (CurrentTryFocusData.FocusedActor.IsValid())
 	{
@@ -646,7 +651,7 @@ void UCISSourcePawnInteractionComponent::TryFocus()
 		auto* CurrentInteractionComponent = CurrentTryFocusData.FocusedActor->FindComponentByClass<UCISInteractionComponent>();
 		if (IsValid(CurrentInteractionComponent))
 		{
-			CurrentTryFocusData.FocusedBestFocusComponent = CurrentInteractionComponent->GetBestFocusComponent(OwnerSourcePawn.Get());
+			CurrentTryFocusData.FocusedBestFocusComponent = CurrentInteractionComponent->GetBestFocusComponent(LastFocusSweepResult, OwnerSourcePawn.Get());
 			if (CurrentTryFocusData.FocusedBestFocusComponent.IsValid())
 			{
 				FCISInteractionFocusParams Params;

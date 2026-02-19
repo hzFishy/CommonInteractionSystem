@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BlueprintComponentReference.h"
 #include "GameplayTagContainer.h"
 #include "Components/SceneComponent.h"
 #include "Shared/Data/CISCoreTypes.h"
@@ -16,7 +17,18 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FCISOnFocusLostSignature, APawn* /* SourcePa
 
 /**
  * Component used by the other interaction components, placed on interactable actors.
- * You can have multiple focus components on one actor, the closest will be used.
+ * You can have multiple focus components on one actor.
+ * To know what focus component to use depending on what primitive component was hit, we use a binding system, see LinkedPrimitiveComponents
+ * Examples of setup:
+ * - FocusComp1
+ *    - Linked to BoxComponent1
+ *    - Linked to SphereComponent2
+ * - FocusComp2
+ *    - Linked to CapsuleComponent1
+ * 
+ * FocusComp1 will be used if the focus query hit BoxComponent1 or SphereComponent2. And FocusComp2 will be used if it was CapsuleComponent1.
+ * If none of these 3 primitive components is hit then nothing will happen.
+ * 
  * This component is used for UI overlays and more.
  * 
  * Since this component has its own bFocusable the default behavior is to have bFocusable match bInteractable on the linked InteractionComponent
@@ -35,6 +47,10 @@ public:
 	FCISOnFocusLostSignature OnFocusLostDelegate;
 	
 protected:
+	/** At least of of these components needs to be hit with a focus query to activiate this focus component */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CommonInteractionSystem|Setup", meta=(AllowedClasses="/Script/Engine.PrimitiveComponent"))
+	TArray<FBlueprintComponentReference> LinkedPrimitiveComponents;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CommonInteractionSystem|Setup")
 	FText FocusText;
 
@@ -81,6 +97,8 @@ public:
 		Core
 	----------------------------------------------------------------------------*/
 public:
+	const TArray<FBlueprintComponentReference>& GetLinkedPrimitiveComponents() const { return LinkedPrimitiveComponents; };
+	
 	UFUNCTION(BlueprintPure, Category="CommonInteractionSystem|Focus")
 	const FText& GetFocusText() const { return FocusText; };
 	

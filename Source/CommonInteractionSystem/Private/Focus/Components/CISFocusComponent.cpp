@@ -50,7 +50,7 @@ void UCISFocusComponent::InitializeComponent()
 	if (bAsyncLoadFocusWidgetClass)
 	{
 		FocusWidgetClass.LoadAsync(FLoadSoftObjectPathAsyncDelegate::CreateWeakLambda(this,
-			[this](const FSoftObjectPath& Path, UObject* Object) mutable
+			[this] (const FSoftObjectPath& Path, UObject* Object) mutable
 		{
 				LoadedFocusWidgetClass = Cast<UClass>(Object);
 		}));

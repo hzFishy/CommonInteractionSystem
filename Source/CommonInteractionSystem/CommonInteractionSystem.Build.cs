@@ -20,7 +20,7 @@ public class CommonInteractionSystem : ModuleRules
 				// Fishy Deps
 				"FishyUtils", "FishyWorldSpaceWidgets",
 				// Miscs
-				"DeveloperSettings"
+				"DeveloperSettings", "BlueprintComponentReference"
 			}
 		);
 		
