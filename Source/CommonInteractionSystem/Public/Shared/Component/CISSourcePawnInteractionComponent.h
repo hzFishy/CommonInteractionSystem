@@ -105,7 +105,7 @@ protected:
 	 *  You have to implement "Activate Ability From Event" with InteractionAbilityEventTag.
 	 *  If the commit is successfull you can call ExecuteInteraction
 	 *  and use GetInteractionAbilityEventData to get the input tags.
-	 *  You need to end the ability if its sinle or let it run if hold,
+	 *  You need to end the ability if its singe or let it run if hold,
 	 *  to know the type of the interaction read InteractionTagType on the optional object.
 	 */
 	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Interaction")

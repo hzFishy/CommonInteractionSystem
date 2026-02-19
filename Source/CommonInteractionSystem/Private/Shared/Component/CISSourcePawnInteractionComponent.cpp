@@ -411,15 +411,17 @@ void UCISSourcePawnInteractionComponent::OnInputSingleOrHoldInteractionStart(UCI
 			FGameplayEventData EventData;
 			EventData.EventTag = InteractionAbilityEventTag;
 			EventData.Instigator = OwnerSourcePawn.Get();
-			EventData.Target = OwnerSourcePawn.Get();
+			EventData.Target = InteractionComponent->GetOwner();
 			
 			auto* InteractionData = NewObject<UCISInteractionAbilityEventData>();
 			InteractionData->SourceTags = SourceInteractionTags;
 			InteractionData->InteractionTagType = InteractionTypeTag;
 			EventData.OptionalObject = InteractionData;
 
-			CIS_LOG_D("Gameplay Event with tag {0} sent to owner pawn {1}",
-				InteractionAbilityEventTag, *FU::Utils::GetObjectDetailedName(OwnerSourcePawn.Get())
+			CIS_LOG_D("Gameplay Event with tag {0} sent to owner pawn {1} with target {2}",
+				InteractionAbilityEventTag, 
+				*FU::Utils::GetObjectDetailedName(OwnerSourcePawn.Get()),
+				*FU::Utils::GetObjectDetailedName(InteractionComponent->GetOwner())
 			);
 			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
 				OwnerSourcePawn.Get(),

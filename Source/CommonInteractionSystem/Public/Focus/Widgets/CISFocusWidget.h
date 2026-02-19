@@ -11,7 +11,7 @@
 /**
  * Widget instantiated on focus interactions
  */
-UCLASS(ClassGroup=(FocusWidget),DisplayName="Focus Widget")
+UCLASS(ClassGroup=(CommonInteractionSystem),DisplayName="Focus Widget")
 class COMMONINTERACTIONSYSTEM_API UCISFocusWidget : public UUserWidget
 {
 	GENERATED_BODY()

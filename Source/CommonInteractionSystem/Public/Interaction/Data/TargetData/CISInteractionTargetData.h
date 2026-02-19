@@ -14,7 +14,7 @@ class COMMONINTERACTIONSYSTEM_API UCISInteractionAbilityEventData : public UObje
 public:
 	UCISInteractionAbilityEventData();
 	
-	UPROPERTY(BlueprintReadOnly, Category="CommonInteractionSystem|Hold")
+	UPROPERTY(BlueprintReadOnly, Category="CommonInteractionSystem|Shared")
 	FGameplayTag InteractionTagType;
 	
 	UPROPERTY(BlueprintReadOnly, Category="CommonInteractionSystem|Shared")

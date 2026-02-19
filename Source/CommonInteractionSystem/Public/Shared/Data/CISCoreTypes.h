@@ -4,9 +4,9 @@
 
 #include "NativeGameplayTags.h"
 #include "CISCoreTypes.generated.h"
-
-
 class UCISFocusComponent;
+
+	
 	/*----------------------------------------------------------------------------
 		Logging
 	----------------------------------------------------------------------------*/
@@ -14,13 +14,7 @@ COMMONINTERACTIONSYSTEM_API DECLARE_LOG_CATEGORY_EXTERN(LogCISValidation, Log, A
 
 #define CIS_LOG_Validation_E(FORMAT, ...) FU_LOG_Validation_E(LogCISValidation, FORMAT, ##__VA_ARGS__);
 
-
-	/*----------------------------------------------------------------------------
-		Delegate Signatures
-	----------------------------------------------------------------------------*/
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCISOnInteractableStateChangedSignature, bool, bnewState);
-
-
+	
 	/*----------------------------------------------------------------------------
 		Gameplay Tags
 	----------------------------------------------------------------------------*/

@@ -12,7 +12,7 @@
 
 UCISInteractionGameplayAbility::UCISInteractionGameplayAbility()
 {
-	auto DefaultTrigger = FAbilityTriggerData();
+	FAbilityTriggerData DefaultTrigger;
 	DefaultTrigger.TriggerTag = TAG_CIS_Interaction_Events_AbilityActivate;
 	AbilityTriggers.Emplace(DefaultTrigger);
 }

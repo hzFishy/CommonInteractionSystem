@@ -9,7 +9,7 @@ class UCISInteractionAbilityEventData;
 
 
 /**
- * For actual code ogic to implement see InteractionAbilityClass in UCISSourcePawnInteractionComponent.
+ * For actual code logic to implement see InteractionAbilityClass in UCISSourcePawnInteractionComponent.
  *
  * Internal process explained:
  * 

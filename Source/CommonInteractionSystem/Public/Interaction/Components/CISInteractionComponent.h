@@ -11,6 +11,9 @@
 #include "CISInteractionComponent.generated.h"
 class UCISFocusComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCISOnInteractableStateChangedSignature, 
+	bool, bnewState
+);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FCISOnSingleInteractionSignature,
 	UCISInteractionComponent*, InteractionComponent,
