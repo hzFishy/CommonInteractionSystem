@@ -18,7 +18,6 @@ UCISFocusComponent::UCISFocusComponent():
 	FocusText(FText::FromString("Focus Text")),
 	IconFocusTag(GetDefault<UCISCoreDeveloperSettings>()->DefaultFocusIconTag),
 	bFocusableByDefault(true),
-	FocusWidgetClass(GetDefault<UCISCoreDeveloperSettings>()->DefaultFocusWidgetClass),
 	bAsyncLoadFocusWidgetClass(true),
 	bFocusable(false),
 	bIsFocused(false)
@@ -46,20 +45,25 @@ void UCISFocusComponent::InitializeComponent()
 		FoundOwnerInteractionComponent->OnHoldInteractionEndedDelegate.AddUniqueDynamic(this, &ThisClass::OnHoldInteractionEnded);
 		FoundOwnerInteractionComponent->OnInteractableStateChangedDelegate.AddUniqueDynamic(this, &ThisClass::OnInteractableStateChanged);
 	}
-
-	if (bAsyncLoadFocusWidgetClass)
+	
+	auto ClassToConsider = FocusWidgetClass.IsNull() ? GetDefault<UCISCoreDeveloperSettings>()->DefaultFocusWidgetClass : FocusWidgetClass;
+	
+	if (FU_ENSURE_WEAKNOTNULL_MSG(ClassToConsider, "No valid Focus Widget Class found for component {0}", *FU::Utils::GetObjectDetailedName(this)))
 	{
-		FocusWidgetClass.LoadAsync(FLoadSoftObjectPathAsyncDelegate::CreateWeakLambda(this,
-			[this] (const FSoftObjectPath& Path, UObject* Object) mutable
+		if (bAsyncLoadFocusWidgetClass)
 		{
-				LoadedFocusWidgetClass = Cast<UClass>(Object);
-		}));
+			ClassToConsider.LoadAsync(FLoadSoftObjectPathAsyncDelegate::CreateWeakLambda(this,
+				[this] (const FSoftObjectPath& Path, UObject* Object) mutable
+			{
+					LoadedFocusWidgetClass = Cast<UClass>(Object);
+			}));
+		}
+		else
+		{
+			LoadedFocusWidgetClass = ClassToConsider.LoadSynchronous();
+		}
 	}
-	else
-	{
-		LoadedFocusWidgetClass = FocusWidgetClass.LoadSynchronous();
-	}
-
+	
 	GetOwner()->OnDestroyed.AddUniqueDynamic(this, &ThisClass::OnOwnerDestroyed);
 }
 
@@ -166,14 +170,30 @@ bool UCISFocusComponent::CanFocus(APawn* SourcePawn, FCISInteractionFocusParams&
 
 UUserWidget* UCISFocusComponent::CreateFocusWidget(const FCISInteractionFocusParams& FocusParams)
 {
-	if (FU_ENSURE_VALID_MSG(LoadedFocusWidgetClass, "LoadedFocusWidgetClass is invalid"))
+	auto WidgetClass = GetFocusWidgetClass();
+	if (FU_ENSURE_VALID_MSG(WidgetClass, "WidgetClass is invalid"))
 	{
-		FocusWidget = CreateWidget<UCISFocusWidget>(GetWorld(), LoadedFocusWidgetClass);
+		FocusWidget = CreateWidget<UCISFocusWidget>(GetWorld(), WidgetClass);
 		UpdateFocusWidgetContent(FocusParams);
 		FocusWidget->AddToViewport();
 	}
-
+	
 	return FocusWidget.Get();
+}
+
+TSubclassOf<UCISFocusWidget> UCISFocusComponent::GetFocusWidgetClass()
+{
+	if (!IsValid(LoadedFocusWidgetClass))
+	{
+		// if we have async load enabled but the class is still not loaded it might be because we are still processing it
+		if (bAsyncLoadFocusWidgetClass)
+		{
+			auto ClassToConsider = FocusWidgetClass.IsNull() ? GetDefault<UCISCoreDeveloperSettings>()->DefaultFocusWidgetClass : FocusWidgetClass;
+			LoadedFocusWidgetClass = ClassToConsider.LoadSynchronous();
+		}
+	}
+	
+	return LoadedFocusWidgetClass;
 }
 
 void UCISFocusComponent::UpdateFocusWidgetContent(const FCISInteractionFocusParams& FocusParams)

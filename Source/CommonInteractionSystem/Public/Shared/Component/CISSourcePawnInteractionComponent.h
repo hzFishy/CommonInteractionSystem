@@ -79,7 +79,7 @@ class COMMONINTERACTIONSYSTEM_API UCISSourcePawnInteractionComponent : public UA
 {
 	GENERATED_BODY()
 
-
+	
 	/*----------------------------------------------------------------------------
 		Properties
 	----------------------------------------------------------------------------*/
@@ -95,12 +95,16 @@ protected:
 	/** Used for interactions and focus */
 	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Shared")
 	TEnumAsByte<ECollisionChannel> TraceChannel;
-
+	
+	/** If true we do not rely on GAS and call directly TryInteraction */
+	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Shared")
+	bool bNoGAS;
+	
 	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Interaction")
 	bool bCanInteract;
 
 	/** Event tag used to trigger the interaction gameplay ability */
-	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Interaction", meta=(Categories="CIS.Interaction.Events"))
+	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Interaction", meta=(Categories="CIS.Interaction.Events", EditCondition="!bNoGAS"))
 	FGameplayTag InteractionAbilityEventTag;
 
 	/**
@@ -110,10 +114,10 @@ protected:
 	 *  You need to end the ability if its singe or let it run if hold,
 	 *  to know the type of the interaction read InteractionTagType on the optional object.
 	 */
-	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Interaction")
+	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Interaction", meta=(EditCondition="!bNoGAS"))
 	TSoftClassPtr<UCISInteractionGameplayAbility> InteractionAbilityClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CommonInteractionSystem|Interaction")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CommonInteractionSystem|Interaction", meta=(EditCondition="!bNoGAS"))
 	bool bAsyncLoadInteractionAbilityClass;
 	
 	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Focus")
@@ -121,7 +125,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Focus")
 	bool bTryFocusOnTick;
-
+	
+	
 	/////////////////////////////
 	/// Shared
 	/* Interaction and focus start trace location */
@@ -163,7 +168,7 @@ public:
 public:
 	UFUNCTION(BlueprintCallable, Category="CommonInteractionSystem|Interaction")
 	void SetInteractionStartPoint(USceneComponent* SceneComponent);
-
+	
 	UFUNCTION(BlueprintCallable, Category="CommonInteractionSystem|Interaction")
 	void SetCanInteract(bool bNewValue);
 	
@@ -182,10 +187,10 @@ public:
 	void OnInputSingleInteraction(FGameplayTagContainer SourceInteractionTags);
 	
 	UFUNCTION(BlueprintCallable, Category="CommonInteractionSystem|Interaction")
-	void OnInputStartHoldInteraction(FGameplayTagContainer SourceInteractionTags);
+	void OnInputHoldStartInteraction(FGameplayTagContainer SourceInteractionTags);
 	
 	UFUNCTION(BlueprintCallable, Category="CommonInteractionSystem|Interaction")
-	void OnInputHoldInteractionEnd();
+	void OnInputHoldEndInteraction();
 	
 	UCISInteractionComponent* GetInteractionComponentFromInteractionTrace();
 	

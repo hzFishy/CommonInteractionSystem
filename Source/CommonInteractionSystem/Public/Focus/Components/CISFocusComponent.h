@@ -59,7 +59,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CommonInteractionSystem|Setup")
 	bool bFocusableByDefault;
-	
+
+	/** If set this will override DefaultFocusWidgetClass in the Project Settings */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CommonInteractionSystem|Setup")
 	TSoftClassPtr<UCISFocusWidget> FocusWidgetClass;
 	
@@ -141,6 +142,8 @@ public:
 	}
 	
 	virtual UUserWidget* CreateFocusWidget(const FCISInteractionFocusParams& FocusParams);
+	
+	TSubclassOf<UCISFocusWidget> GetFocusWidgetClass();
 
 	virtual void UpdateFocusWidgetContent(const FCISInteractionFocusParams& FocusParams);
 	

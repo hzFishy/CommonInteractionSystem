@@ -10,7 +10,7 @@ class UCISFocusWidget;
 /**
  * 
  */
-UCLASS(Config=Game, DisplayName="Common Interaction System")
+UCLASS(Config=Game, DefaultConfig, DisplayName="Common Interaction System")
 class COMMONINTERACTIONSYSTEM_API UCISCoreDeveloperSettings : public UDeveloperSettings
 {
 	GENERATED_BODY()

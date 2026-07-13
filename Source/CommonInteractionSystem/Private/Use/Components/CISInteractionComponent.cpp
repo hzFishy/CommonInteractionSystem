@@ -186,7 +186,7 @@ bool UCISInteractionComponent::CanInteractWith(APawn* SourcePawn, FCISInteractio
 	{
 		return ICISInteractionCustomization::Execute_CanInteractWith(GetOwner(), SourcePawn, InteractionParams);
 	}
-
+	
 	return true;
 }
 
