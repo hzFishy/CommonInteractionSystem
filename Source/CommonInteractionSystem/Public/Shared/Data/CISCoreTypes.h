@@ -40,12 +40,15 @@ struct COMMONINTERACTIONSYSTEM_API FCISInteractionFocusParams
 	
 	/**
 	 * True when we are only testing the CanFocus result.
-	 * Use this to skip heaving code only meant for real focus logic
+	 * Use this to skip heavy code only meant for real focus logic
 	 */
 	bool bIsTest;
+	
 	const FHitResult* FocusHitResult;
+	
 	/** If no override this text will be used */
 	FText DefaultText;
+	
 	/** Tags passed from Pawn Interaction Component */
 	FGameplayTagContainer SourceInteractionTags;
 
@@ -55,7 +58,7 @@ struct COMMONINTERACTIONSYSTEM_API FCISInteractionFocusParams
 	
 	/** If not empty we will use this instead of DefaultText */
 	FText OverrideText;
-
+	
 	/** Get the end focus text */
 	const FText& GetFinalFocusText() const;
 };

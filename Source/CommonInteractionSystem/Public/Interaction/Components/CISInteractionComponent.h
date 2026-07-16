@@ -40,7 +40,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FCISOnHoldInteractionEndedSignatur
 
 /**
  *	Component placed on usable actors, the owning actor needs to have at least one focus scene component.
- *	Only use one Interaction Component per actor
+ *	Only use one Interaction Component per actor.
+ *	Owning actor can implement UCISInteractionCustomization for more customization.
  */
 UCLASS(ClassGroup=(CommonInteractionSystem), Blueprintable, DisplayName="Interaction Component", meta=(BlueprintSpawnableComponent))
 class COMMONINTERACTIONSYSTEM_API UCISInteractionComponent : public UActorComponent

@@ -3,13 +3,13 @@
 
 #include "Shared/Data/CISCoreTypes.h"
 
-
+	
 	/*----------------------------------------------------------------------------
 		Logging
 	----------------------------------------------------------------------------*/
 DEFINE_LOG_CATEGORY(LogCISValidation);
 
-
+	
 	/*----------------------------------------------------------------------------
 		Gameplay Tags
 	----------------------------------------------------------------------------*/
@@ -18,16 +18,20 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_CIS_Interaction_Types_Single, "CIS.Interaction.Types.
 UE_DEFINE_GAMEPLAY_TAG(TAG_CIS_Interaction_Types_Hold, "CIS.Interaction.Types.Hold");
 UE_DEFINE_GAMEPLAY_TAG(TAG_CIS_Shared_Icons_DefaultInteraction, "CIS.Shared.Icons.DefaultInteraction");
 
-
+	
 	/*----------------------------------------------------------------------------
 		Types
 	----------------------------------------------------------------------------*/
 FCISInteractionFocusParams::FCISInteractionFocusParams():
-	bIsTest(false), FocusHitResult(nullptr) {}
+	bIsTest(false), 
+	FocusHitResult(nullptr) 
+{}
 
 const FText& FCISInteractionFocusParams::GetFinalFocusText() const
 {
 	return OverrideText.IsEmpty() ? DefaultText : OverrideText;
 }
 
-FCISInteractionParams::FCISInteractionParams(): HitResult(nullptr) {}
+FCISInteractionParams::FCISInteractionParams(): 
+	HitResult(nullptr) 
+{}

@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "Shared/Data/CISCoreTypes.h"
 #include "UObject/Interface.h"
 #include "CISInteractionCustomization.generated.h"
