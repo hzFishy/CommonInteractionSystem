@@ -73,10 +73,12 @@ void FCISInteractionRunningProcess::Reset()
 {
 	bRunning = false;
 	InteractionTypeTag = FGameplayTag();
+	SourceInteractionTags.Reset();
+	FocusTags.Reset();
 	TimerHandle.Invalidate();
 	InteractionComponent.Reset();
 	SelectedFocusComponent.Reset();
-
+	
 	HoldInteractionDelegateHandle.Reset();
 	bHoldInteractionFinished = false;
 	bHoldInteractionSuccessful = false;
@@ -363,41 +365,46 @@ bool UCISSourcePawnInteractionComponent::TryInteraction(const FGameplayTagContai
 			{
 				InteractionParams.ConsideredFocusComponent = InteractionComponent->GetBestFocusComponent(*InteractionParams.HitResult, OwnerSourcePawn.Get());
 				
-				if (InteractionComponent->IsSingleType())
+				if (InteractionParams.ConsideredFocusComponent.IsValid())
 				{
-					CIS_LOG_D("Trying to single interact with {0}", *FU::Utils::GetObjectDetailedName(InteractionComponent));
-					InteractionParams.SourceInteractionTagType = TAG_CIS_Interaction_Types_Single;
-					return InteractionComponent->TryInteract(
-						OwnerSourcePawn.Get(),
-						InteractionParams
-					);
-				}
-				else if (InteractionComponent->IsHoldType())
-				{
-					InteractionParams.SourceInteractionTagType = TAG_CIS_Interaction_Types_Hold;
-
-					// detect if hold finished (if we started it previously)
-					if (IsHoldRunning() && SharedInteractionRunningProcess.bHoldInteractionFinished)
+					InteractionParams.ConsideredFocusComponent->GetFocusTags(InteractionParams.FocusTags);
+					
+					if (InteractionComponent->IsSingleType())
 					{
-						CIS_LOG_D("Trying to interact with {0} from completed hold interaction",
-							*FU::Utils::GetObjectDetailedName(InteractionComponent)
-						);
-						// interaction could still fail here if something changed in game while the hold was done
+						CIS_LOG_D("Trying to single interact with {0}", *FU::Utils::GetObjectDetailedName(InteractionComponent));
+						InteractionParams.SourceInteractionTagType = TAG_CIS_Interaction_Types_Single;
 						return InteractionComponent->TryInteract(
 							OwnerSourcePawn.Get(),
 							InteractionParams
 						);
 					}
-					// dont use if already using
-					else if (IsHoldRunning())
+					else if (InteractionComponent->IsHoldType())
 					{
-						return false;
+						InteractionParams.SourceInteractionTagType = TAG_CIS_Interaction_Types_Hold;
+						
+						// detect if hold finished (if we started it previously)
+						if (IsHoldRunning() && SharedInteractionRunningProcess.bHoldInteractionFinished)
+						{
+							CIS_LOG_D("Trying to interact with {0} from completed hold interaction",
+								*FU::Utils::GetObjectDetailedName(InteractionComponent)
+							);
+							// interaction could still fail here if something changed in game while the hold was done
+							return InteractionComponent->TryInteract(
+								OwnerSourcePawn.Get(),
+								InteractionParams
+							);
+						}
+						// dont use if already using
+						else if (IsHoldRunning())
+						{
+							return false;
+						}
+						
+						CIS_LOG_D("Starting hold interaction process with {0}", *FU::Utils::GetObjectDetailedName(InteractionComponent));
+						
+						// otherwise start a hold operation
+						return HoldInteractionStart(InteractionComponent, InteractionParams);
 					}
-					
-					CIS_LOG_D("Starting hold interaction process with {0}", *FU::Utils::GetObjectDetailedName(InteractionComponent));
-					
-					// otherwise start a hold operation
-					return HoldInteractionStart(InteractionComponent, InteractionParams);
 				}
 			}
 		}
@@ -466,6 +473,7 @@ bool UCISSourcePawnInteractionComponent::HoldInteractionStart(UCISInteractionCom
 		SharedInteractionRunningProcess.InteractionTypeTag = TAG_CIS_Interaction_Types_Hold;
 		SharedInteractionRunningProcess.InteractionComponent = InteractionComponent;
 		SharedInteractionRunningProcess.SelectedFocusComponent = InteractionComponent->GetBestFocusComponent(*InteractionParams.HitResult, OwnerSourcePawn.Get());
+		SharedInteractionRunningProcess.SelectedFocusComponent->GetFocusTags(SharedInteractionRunningProcess.FocusTags);
 		
 		// handle blocking movement/look input
 		{
@@ -505,6 +513,7 @@ bool UCISSourcePawnInteractionComponent::HoldInteractionStart(UCISInteractionCom
 		InteractionComponent->TriggerOnHoldInteractionStarted(
 			OwnerSourcePawn.Get(),
 			InteractionParams.SourceInteractionTags,
+			InteractionParams.FocusTags,
 			true,
 			HoldFragment->HoldTime
 		);
@@ -518,6 +527,7 @@ bool UCISSourcePawnInteractionComponent::HoldInteractionStart(UCISInteractionCom
 		InteractionComponent->TriggerOnHoldInteractionStarted(
 			OwnerSourcePawn.Get(),
 			InteractionParams.SourceInteractionTags,
+			InteractionParams.FocusTags,
 			false,
 			HoldFragment->HoldTime
 		);
@@ -592,6 +602,7 @@ void UCISSourcePawnInteractionComponent::OnHoldInteractionFinished(bool bSuccess
 		SharedInteractionRunningProcess.InteractionComponent->TriggerOnHoldInteractionEnded(
 			OwnerSourcePawn.Get(),
 			SharedInteractionRunningProcess.SourceInteractionTags,
+			SharedInteractionRunningProcess.FocusTags,
 			false
 		);
 	}

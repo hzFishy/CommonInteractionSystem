@@ -54,6 +54,7 @@ struct COMMONINTERACTIONSYSTEM_API FCISInteractionRunningProcess
 	bool bRunning;
 	FGameplayTag InteractionTypeTag;
 	FGameplayTagContainer SourceInteractionTags;
+	FGameplayTagContainer FocusTags;
 	FTimerHandle TimerHandle;
 	TWeakObjectPtr<UCISInteractionComponent> InteractionComponent;
 	TWeakObjectPtr<UCISFocusComponent> SelectedFocusComponent;

@@ -23,22 +23,22 @@ class COMMONINTERACTIONSYSTEM_API UCISFocusWidget : public UUserWidget
 public:
 	void UpdateContent(const FText& FocusText, FGameplayTag IconFocusTag);
 
-	void OnSingleInteraction(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, bool bInteractionSucceeded);
+	void OnSingleInteraction(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& FocusTags, bool bInteractionSucceeded);
 	
-	void OnHoldInteractionStarted(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, bool bInteractionSucceeded, float TimeToHold);
+	void OnHoldInteractionStarted(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& FocusTags, bool bInteractionSucceeded, float TimeToHold);
 
-	void OnHoldInteractionEnded(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, bool bSuccess);
+	void OnHoldInteractionEnded(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& FocusTags, bool bSuccess);
 	
 protected:
 	UFUNCTION(BlueprintImplementableEvent, DisplayName="Update Content")
 	void K2_UpdateContent(const FText& FocusText, FGameplayTag IconFocusTag);
 
 	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Single Interaction")
-	void K2_OnSingleInteraction(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, bool bInteractionSucceeded);
+	void K2_OnSingleInteraction(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& FocusTags, bool bInteractionSucceeded);
 
 	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Hold Interaction Started")
-	void K2_OnHoldInteractionStarted(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, bool bInteractionSucceeded, float TimeToHold);
+	void K2_OnHoldInteractionStarted(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& FocusTags, bool bInteractionSucceeded, float TimeToHold);
 
 	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Hold Interaction Ended")
-	void K2_OnHoldInteractionEnded(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, bool bSuccess);
+	void K2_OnHoldInteractionEnded(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& FocusTags, bool bSuccess);
 };

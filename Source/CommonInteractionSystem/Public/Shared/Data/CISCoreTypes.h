@@ -75,8 +75,14 @@ struct COMMONINTERACTIONSYSTEM_API FCISInteractionParams
 	/// In
 	
 	const FHitResult* HitResult;
+	
 	FGameplayTag SourceInteractionTagType;
+	
 	/** Tags passed from Pawn Interaction Component */
 	FGameplayTagContainer SourceInteractionTags;
+	
+	/** Tags passed from Best Focus Component */
+	FGameplayTagContainer FocusTags;
+	
 	TWeakObjectPtr<UCISFocusComponent> ConsideredFocusComponent;
 };

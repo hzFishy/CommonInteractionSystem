@@ -53,7 +53,10 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CommonInteractionSystem|Setup")
 	FText FocusText;
-
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CommonInteractionSystem|Setup")
+	FGameplayTagContainer FocusTags;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CommonInteractionSystem|Setup", meta=(Categories="CIS.Shared.Icons"))
 	FGameplayTag IconFocusTag;
 
@@ -102,6 +105,9 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category="CommonInteractionSystem|Focus")
 	const FText& GetFocusText() const { return FocusText; };
+	
+	UFUNCTION(BlueprintPure, Category="CommonInteractionSystem|Focus")
+	void GetFocusTags(FGameplayTagContainer& Container) const;
 	
 	UFUNCTION(BlueprintPure, Category="CommonInteractionSystem|Focus")
 	const FGameplayTag& GetIconFocusTag() const { return IconFocusTag; };
@@ -159,13 +165,13 @@ protected:
 	UFUNCTION() void OnInteractableStateChanged(bool bNewState);
 
 	UFUNCTION() void OnSingleInteraction(UCISInteractionComponent* InteractionComponent, APawn* SourcePawn,
-		const FGameplayTagContainer& SourceInteractionTags, bool bInteractionSucceeded);
+		const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& InFocusTags, bool bInteractionSucceeded);
 	
 	UFUNCTION() void OnHoldInteractionStarted(UCISInteractionComponent* InteractionComponent, APawn* SourcePawn,
-		const FGameplayTagContainer& SourceInteractionTags, bool bInteractionSucceeded, float TimeToHold);
+		const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& InFocusTags, bool bInteractionSucceeded, float TimeToHold);
 	
 	UFUNCTION() void OnHoldInteractionEnded(UCISInteractionComponent* InteractionComponent, APawn* SourcePawn,
-		const FGameplayTagContainer& SourceInteractionTags, bool bHoldSucceeded);
+		const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& InFocusTags, bool bHoldSucceeded);
 
 	UFUNCTION() void OnOwnerDestroyed(AActor* DestroyedActor);
 };

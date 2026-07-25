@@ -126,6 +126,7 @@ bool UCISInteractionComponent::TryInteract(APawn* SourcePawn, FCISInteractionPar
 				SourcePawn, 
 				InteractionParams.SourceInteractionTagType,
 				InteractionParams.SourceInteractionTags, 
+				InteractionParams.FocusTags,
 				bCanInteract
 			);
 			
@@ -133,6 +134,7 @@ bool UCISInteractionComponent::TryInteract(APawn* SourcePawn, FCISInteractionPar
 				this,
 				SourcePawn,
 				InteractionParams.SourceInteractionTags,
+				InteractionParams.FocusTags,
 				bCanInteract
 			);
 		}
@@ -146,12 +148,14 @@ bool UCISInteractionComponent::TryInteract(APawn* SourcePawn, FCISInteractionPar
 				SourcePawn,
 				InteractionParams.SourceInteractionTagType,
 				InteractionParams.SourceInteractionTags,
+				InteractionParams.FocusTags,
 				bCanInteract
 			);
 
 			TriggerOnHoldInteractionEnded(
 				SourcePawn,
 				InteractionParams.SourceInteractionTags,
+				InteractionParams.FocusTags,
 				bCanInteract
 			);
 		}
@@ -161,9 +165,9 @@ bool UCISInteractionComponent::TryInteract(APawn* SourcePawn, FCISInteractionPar
 }
 
 void UCISInteractionComponent::OnInteraction(APawn* SourcePawn, const FGameplayTag& SourceInteractionTagType,
-	const FGameplayTagContainer& SourceInteractionTags, bool bCanInteractResult)
+	const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& FocusTags, bool bCanInteractResult)
 {
-	K2_OnInteraction(SourcePawn, SourceInteractionTagType, SourceInteractionTags, bCanInteractResult);
+	K2_OnInteraction(SourcePawn, SourceInteractionTagType, SourceInteractionTags, FocusTags, bCanInteractResult);
 }
 
 bool UCISInteractionComponent::CanInteractWith(APawn* SourcePawn, FCISInteractionParams& InteractionParams) const
@@ -190,25 +194,27 @@ bool UCISInteractionComponent::CanInteractWith(APawn* SourcePawn, FCISInteractio
 	return true;
 }
 
-void UCISInteractionComponent::TriggerOnHoldInteractionStarted(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags,
+void UCISInteractionComponent::TriggerOnHoldInteractionStarted(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& FocusTags,
 	bool bInteractionSucceeded, float TimeToHold)
 {
 	OnHoldInteractionStartedDelegate.Broadcast(
 		this,
 		SourcePawn,
 		SourceInteractionTags,
+		FocusTags,
 		bInteractionSucceeded,
 		TimeToHold
 	);
 }
 
-void UCISInteractionComponent::TriggerOnHoldInteractionEnded(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags,
+void UCISInteractionComponent::TriggerOnHoldInteractionEnded(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& FocusTags,
 	bool bHoldSucceeded)
 {
 	OnHoldInteractionEndedDelegate.Broadcast(
 		this,
 		SourcePawn,
 		SourceInteractionTags,
+		FocusTags,
 		bHoldSucceeded
 	);
 }

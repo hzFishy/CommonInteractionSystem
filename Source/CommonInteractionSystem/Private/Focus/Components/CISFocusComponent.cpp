@@ -67,7 +67,12 @@ void UCISFocusComponent::InitializeComponent()
 	GetOwner()->OnDestroyed.AddUniqueDynamic(this, &ThisClass::OnOwnerDestroyed);
 }
 
+void UCISFocusComponent::GetFocusTags(FGameplayTagContainer& Container) const
+{
+	Container.AppendTags(FocusTags);
+}
 
+	
 	/*----------------------------------------------------------------------------
 		Core
 	----------------------------------------------------------------------------*/
@@ -248,29 +253,29 @@ void UCISFocusComponent::OnInteractableStateChanged(bool bNewState)
 }
 
 void UCISFocusComponent::OnSingleInteraction(UCISInteractionComponent* InteractionComponent, APawn* SourcePawn,
-		const FGameplayTagContainer& SourceInteractionTags, bool bInteractionSucceeded)
+		const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& InFocusTags, bool bInteractionSucceeded)
 {
 	if (IsValid(FocusWidget))
 	{
-		FocusWidget->OnSingleInteraction(SourcePawn, SourceInteractionTags, bInteractionSucceeded);
+		FocusWidget->OnSingleInteraction(SourcePawn, SourceInteractionTags, InFocusTags, bInteractionSucceeded);
 	}
 }
 
 void UCISFocusComponent::OnHoldInteractionStarted(UCISInteractionComponent* InteractionComponent, APawn* SourcePawn,
-	const FGameplayTagContainer& SourceInteractionTags, bool bInteractionSucceeded, float TimeToHold)
+	const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& InFocusTags, bool bInteractionSucceeded, float TimeToHold)
 {
 	if (IsValid(FocusWidget))
 	{
-		FocusWidget->OnHoldInteractionStarted(SourcePawn, SourceInteractionTags, bInteractionSucceeded, TimeToHold);
+		FocusWidget->OnHoldInteractionStarted(SourcePawn, SourceInteractionTags, InFocusTags, bInteractionSucceeded, TimeToHold);
 	}
 }
 
 void UCISFocusComponent::OnHoldInteractionEnded(UCISInteractionComponent* InteractionComponent, APawn* SourcePawn,
-	const FGameplayTagContainer& SourceInteractionTags, bool bHoldSucceeded)
+	const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& InFocusTags, bool bHoldSucceeded)
 {
 	if (IsValid(FocusWidget))
 	{
-		FocusWidget->OnHoldInteractionEnded(SourcePawn, SourceInteractionTags, bHoldSucceeded);
+		FocusWidget->OnHoldInteractionEnded(SourcePawn, SourceInteractionTags, InFocusTags, bHoldSucceeded);
 	}
 }
 

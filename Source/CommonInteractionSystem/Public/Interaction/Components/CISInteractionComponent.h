@@ -15,25 +15,28 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCISOnInteractableStateChangedSignat
 	bool, bnewState
 );
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FCISOnSingleInteractionSignature,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FCISOnSingleInteractionSignature,
 	UCISInteractionComponent*, InteractionComponent,
 	APawn*, SourcePawn,
 	const FGameplayTagContainer&, SourceInteractionTags,
+	const FGameplayTagContainer&, FocusTags,
 	bool, bInteractionSucceeded
 );
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FCISOnHoldInteractionStartedSignature,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FCISOnHoldInteractionStartedSignature,
 	UCISInteractionComponent*, InteractionComponent,
 	APawn*, SourcePawn,
 	const FGameplayTagContainer&, SourceInteractionTags,
+	const FGameplayTagContainer&, FocusTags,
 	bool, bInteractionSucceeded,
 	float, TimeToHold
 );
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FCISOnHoldInteractionEndedSignature,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FCISOnHoldInteractionEndedSignature,
 	UCISInteractionComponent*, InteractionComponent,
 	APawn*, SourcePawn,
 	const FGameplayTagContainer&, SourceInteractionTags,
+	const FGameplayTagContainer&, FocusTags,
 	bool, bHoldSucceeded
 );
 
@@ -147,19 +150,19 @@ public:
 	virtual bool TryInteract(APawn* SourcePawn, FCISInteractionParams& InteractionParams);
 
 	virtual void OnInteraction(APawn* SourcePawn, const FGameplayTag& SourceInteractionTagType,
-		const FGameplayTagContainer& SourceInteractionTags, bool bCanInteractResult);
+		const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& FocusTags, bool bCanInteractResult);
 	
 	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Interaction")
 	void K2_OnInteraction(APawn* SourcePawn, const FGameplayTag& SourceInteractionTagType,
-		const FGameplayTagContainer& SourceInteractionTags, bool bCanInteractResult);
+		const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& FocusTags, bool bCanInteractResult);
 	
 	UFUNCTION(BlueprintPure, Category="CommonInteractionSystem|Interaction")
 	virtual bool CanInteractWith(APawn* SourcePawn, FCISInteractionParams& InteractionParams) const;
 
-	void TriggerOnHoldInteractionStarted(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags,
+	void TriggerOnHoldInteractionStarted(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& FocusTags,
 		bool bInteractionSucceeded, float TimeToHold);
 	
-	void TriggerOnHoldInteractionEnded(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags,
+	void TriggerOnHoldInteractionEnded(APawn* SourcePawn, const FGameplayTagContainer& SourceInteractionTags, const FGameplayTagContainer& FocusTags,
 		bool bHoldSucceeded);
 	
 	/** See UCISFocusComponent declaration for more details */
