@@ -23,17 +23,17 @@
 namespace CIS::Debug
 {
 #if CIS_WITH_DEBUG
-	FU_CMD_BOOL_WITH_OPT_FLOAT_CPPONLY(DrawInteractionTrace,
+	FU_CMD_AUTOVAR(DrawInteractionTraceCmd,
 		"CIS.DrawInteractionTrace", "Draw Interaction traces",
-		bDrawInteractionTrace, DrawInteractionTraceDuration, 2
+		int32, DrawInteractionTrace, 0
 	);
-	FU_CMD_BOOL_WITH_OPT_FLOAT_CPPONLY(DrawFocusTrace,
+	FU_CMD_AUTOVAR(DrawFocusTraceCmd,
 		"CIS.DrawFocusTrace", "Draw Focus traces",
-		bDrawFocusTrace, DrawFocusTraceDuration, 2
+		int32, DrawFocusTrace, 0
 	);
-	FU_CMD_BOOL_TOGGLE(DrawFocusFrameState,
+	FU_CMD_AUTOVAR(DrawFocusFrameStateCmd,
 		"CIS.DrawFocusFrameState", "Draw Focus frame state",
-		bDrawFocusFrameState, false
+		int32, DrawFocusFrameState, 0
 	);
 #endif
 }
@@ -91,6 +91,7 @@ void FCISInteractionRunningProcess::Reset()
 UCISSourcePawnInteractionComponent::UCISSourcePawnInteractionComponent():
 	InteractionLineTraceLength(300),
 	InteractionSphereRadius(20),
+	InteractionLineTraceOffset(10),
 	TraceChannel(ECC_Visibility),
 	bNoGAS(false),
 	bCanInteract(true),
@@ -164,7 +165,7 @@ void UCISSourcePawnInteractionComponent::TickComponent(float DeltaTime, ELevelTi
 		TryFocus();
 
 #if CIS_WITH_DEBUG
-		if (CIS::Debug::bDrawFocusFrameState)
+		if (CIS::Debug::DrawFocusFrameState > 0)
 		{
 			// draw focused actor and focus scene component
 			if (PreviousTryFocusData.FocusedActor.IsValid())
@@ -233,7 +234,7 @@ void UCISSourcePawnInteractionComponent::DoSharedInteractionTrace(FHitResult& Ou
 {
 	FCollisionShape Shape = FCollisionShape::MakeSphere(InteractionSphereRadius);
 	
-	const FVector& StartLocation = InteractionStartPoint->GetComponentLocation();
+	const FVector& StartLocation = InteractionStartPoint->GetComponentLocation() + (InteractionStartPoint->GetForwardVector() * InteractionLineTraceOffset);
 	FVector EndLocation = InteractionStartPoint->GetComponentLocation() + (InteractionStartPoint->GetForwardVector() * InteractionLineTraceLength);
 	
 	FCollisionQueryParams QueryParams;
@@ -250,7 +251,7 @@ void UCISSourcePawnInteractionComponent::DoSharedInteractionTrace(FHitResult& Ou
 	);
 
 #if CIS_WITH_DEBUG
-	if ((!bFocusTrace && CIS::Debug::bDrawInteractionTrace) || (bFocusTrace && CIS::Debug::bDrawFocusTrace))
+	if ((!bFocusTrace && CIS::Debug::DrawInteractionTrace > 0) || (bFocusTrace && CIS::Debug::DrawFocusTrace > 0))
 	{
 		DrawSphereSweeps(
 			GetWorld(),
@@ -258,8 +259,18 @@ void UCISSourcePawnInteractionComponent::DoSharedInteractionTrace(FHitResult& Ou
 			EndLocation,
 			Shape.GetCapsuleRadius(),
 			{OutResult},
-			bFocusTrace ? 0 : CIS::Debug::DrawInteractionTraceDuration
+			bFocusTrace ? 0 : 2
 		);
+		
+		if (OutResult.bBlockingHit)
+		{
+			FU::Draw::DrawDebugSphereFrame(
+				GetWorld(), 
+				OutResult.ImpactPoint,
+				5,
+				FColor::Red
+			);
+		}
 	}
 #endif
 }

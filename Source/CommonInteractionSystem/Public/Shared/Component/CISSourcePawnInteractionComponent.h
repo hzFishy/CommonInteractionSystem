@@ -86,13 +86,17 @@ class COMMONINTERACTIONSYSTEM_API UCISSourcePawnInteractionComponent : public UA
 	----------------------------------------------------------------------------*/
 protected:
 	/** Used for interactions and focus */
-	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Shared")
+	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Shared", meta=(ClampMin=0, UIMin=0))
 	float InteractionLineTraceLength;
 	
 	/** Used for interactions and focus */
-	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Shared")
+	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Shared", meta=(ClampMin=0, UIMin=0))
 	float InteractionSphereRadius;
-
+	
+	/** Used for interactions and focus */
+	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Shared", meta=(ClampMin=0, UIMin=0))
+	float InteractionLineTraceOffset;
+	
 	/** Used for interactions and focus */
 	UPROPERTY(EditAnywhere, Category="CommonInteractionSystem|Shared")
 	TEnumAsByte<ECollisionChannel> TraceChannel;
